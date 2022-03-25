@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+  <html>
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+      <title></title>
+      <link rel="stylesheet" type="text/css" href="css/app.css" />
+      <link rel="stylesheet" type="text/css" href="css/aui.css" />
+      <link rel="stylesheet" type="text/css" href="css/aui-pull-refresh.css" />
+      <link rel="stylesheet" type="text/css" href="css/font-awesome/css/font-awesome.min.css" />
+      <style>
+          body{
+
+          }
+
+          .am-with-fixed--custheader {
+            padding-top: 2.25rem;
+          }
+      </style>
+  </head>
+  <body class="am-with-fixed--custheader aui-margin-l-0">
+    <div id="header" class="am-header-fixed" >
+    <header id="aui-header" class="aui-bar aui-bar-nav aui-bar-light">
+      <a class="aui-btn aui-pull-left" tapmode onclick="closeWin()">
+          <span class="aui-iconfont aui-icon-left"></span>
+      </a>
+    <div class="aui-title" id="title"></div>
+
+    <a name="__clickOnceBtn" class="aui-btn aui-pull-right" tapmode onclick="commit()">
+        <span class="aui-iconfont aui-icon-correct"></span>
+    </a>
+    </header>
+</div>
+
+
+<ul class="aui-list aui-form-list">
+  <li class="aui-list-item">
+      <div class="aui-list-item-inner">
+          <div class="aui-list-item-label">
+              名称
+          </div>
+
+          <div class="aui-list-item-input">
+                <input  id="Name" placeholder="" type="text" >
+          </div>
+      </div>
+  </li>
+
+  <li class="aui-list-item">
+      <div class="aui-list-item-inner">
+          <div class="aui-list-item-label">
+              发起人
+          </div>
+
+          <div class="aui-list-item-input">
+                <input  id="UserNames" placeholder="" type="text" readonly>
+          </div>
+          <div class="aui-pull-right  " style="width:40px !important">
+              <a onclick="selectUsers('UserNames')"  style="width:100%"> &gt;&gt;&nbsp;</a>
+          </div>
+      </div>
+  </li>
+  </ul>
+
+<section >
+<ul class="aui-list aui-form-list" id="bpmNodeContent" style="background-color:#f5f5f5">
+
+</ul>
+</section>
+<br/>
+<div class="aui-text-center  aui-margin-15" >
+<div class="aui-btn aui-btn-block aui-btn-primary" onclick="addBpmNode()">新增步骤</div>
+</div>
+
+      <script id="bpmNodeTpl" type="text/html">
+          {{each list}}
+          <li class="aui-list-item" id="li_{{$value[0]}}" style="height:40px" style="background-color:#ffffff !important;">
+              <div class="aui-list-item-inner">
+                  <div class="aui-list-item-label" id="orderNo_{{$value[0]}}">
+                      {{$value[1]}}
+                  </div>
+
+                  <div class="aui-list-item-input" onclick="selectUser('{{$value[0]}}_UserName')">
+                        <input  id="{{$value[0]}}_UserName" users='[["{{$value[3]}}",""]]' placeholder="点击选择审批人" type="text" readonly value="{{$value[5]}}">
+                  </div>
+
+                  <div class="aui-pull-right  " style="width:40px !important">
+                    <a onclick="removeNode('{{$value[0]}}')"  style="width:100%"> <i class="fa fa-close"></i> </a>
+                  </div>
+
+
+              </div>
+          </li>
+          {{/each}}
+      </script>
+  </body>
+  <script type="text/javascript" src="script/api.js" ></script>
+  <script type="text/javascript" src="css/amazeui/js/jquery.min.js"></script>
+  <script type='text/javascript' src='script/common.js'></script>
+  <script type='text/javascript' src='script/queryapi.js'></script>
+  <script type='text/javascript' src='script/template.js'></script>
+  <script type="text/javascript" src="script/imageapi.js"></script>
+  <script type="text/javascript" src="script/aui-dialog.js" ></script>
+  <script type="text/javascript" src="script/aui-toast.js" ></script>
+  <script type="text/javascript">
+  function closeWin(){
+      api.closeWin({
+      });
+  }
+
+var toast = new auiToast();
+var bpmNodeslist=[];//node  bpmNodeslist
+var origNodeIds=[];
+var deleteIds=[];
+var orginUserIds=[];
+
+      apiready = function(){
+        var header = $api.byId('aui-header');
+        $api.fixStatusBar(header);
+
+        var height = $("#header").height();
+        $('body').css('padding-top', height);
+
+          initData();
+      };
+
+      function initData(){
+          $("#title").html(api.pageParam.processName+"流程");
+          if(api.pageParam.processId && api.pageParam.processId!=""){
+              loadEntity(api.pageParam.processId);
+              loadUserLink(api.pageParam.processId);
+              loadBpmNodes(api.pageParam.projectId,api.pageParam.processId);
+          }else{
+             $("#Name").val(api.pageParam.processName);
+          }
+      }
+
+      function loadEntity(processId){
+        AjaxApi.rest("retrievEntity","BpmProcess",processId,function(data){
+              $("#Name").val(data.Name);
+          });
+      }
+
+      function loadUserLink(processId){
+        var queryparam = {"ProcessId":processId};
+
+        AjaxApi.query("query_1014",queryparam,function(data){
+              var datalist = data.list;
+              if(datalist&& datalist.length>0){
+                  currSelectUserNodeId="UserNames";
+                  setSelectUsers(JSON.stringify(datalist),"[]");
+                  orginUserIds = datalist.select(0);
+              }
+         });
+      }
+
+      function preIntProc(datalist){
+        for(var j=0;j<datalist.length;++j){
+            var item = datalist[j];
+            if(item.length >=2){
+               item[1] = parseInt(item[1]);
+            }
+        }
+      }
+
+      function loadBpmNodes(projectId,processId){
+        AjaxApi.query("query_1012",{"ProjectId":projectId,"ProcessId":processId},function(data){
+
+          if(data.list){
+            bpmNodeslist = data.list;
+            origNodeIds = bpmNodeslist.select(0);
+
+            preIntProc(bpmNodeslist);
+            var tplData = {
+              "list" : bpmNodeslist
+            };
+            var html = template("bpmNodeTpl", tplData);
+            $("#bpmNodeContent").html(html);
+
+          }
+        });
+      }
+
+      function addBpmNode(){
+        var emptyItem = [GetUuid(),bpmNodeslist.length+1,0,"","",""];
+        var tplData = {
+          "list" : [emptyItem]
+        };
+        var html = template("bpmNodeTpl", tplData);
+        $("#bpmNodeContent").append(html);
+
+        bpmNodeslist.push(emptyItem);
+      }
+
+      function removeNode(id){
+        $("#li_"+id).remove();
+        for(var i=bpmNodeslist.length-1;i>=0;--i){
+          var item = bpmNodeslist[i];
+          if(item[0] == id){
+              bpmNodeslist.splice(i,1);
+              deleteIds.push(id);
+
+              if(i<bpmNodeslist.length){
+                for(var j=i;j<bpmNodeslist.length;++j){
+                    var nextitem = bpmNodeslist[j];
+                    nextitem[1]=j+1;
+                    $("#orderNo_"+nextitem[0]).html(j+1);
+                }
+              }
+              break;
+          }
+        }
+      }
+
+      function getUserId(usersstr,orderNo){
+          var usersArray =[];
+          try{
+             usersArray = JSON.parse(usersstr);
+          }catch(e){}
+
+          if(usersArray.length == 0){
+            api.toast({
+              msg : '第'+orderNo+"步必须选择审批人",
+              duration : 2000,
+              location : 'bottom'
+            });
+            return "";
+          }
+
+          var userInfo = usersArray[0];
+          if (userInfo.length ==0 ){
+            api.toast({
+              msg : "人员信息错误",
+              duration : 2000,
+              location : 'bottom'
+            });
+            return "";
+          }
+
+          return userInfo[0];
+      }
+
+      function enableClickOnceBtn(){
+        $("*[name='__clickOnceBtn']").removeClass("__btnClickOnce");
+      }
+
+      function commit(){
+        if($("*[name='__clickOnceBtn']").hasClass('__btnClickOnce')) {
+            return;
+        }
+        $("*[name='__clickOnceBtn']").addClass("__btnClickOnce");
+
+           if($("#Name").val() == ""){
+             api.toast({
+               msg : "流程名称必填",
+               duration : 2000,
+               location : 'bottom'
+             });
+             enableClickOnceBtn();
+             return;
+           }
+
+          for(var j=0;j<bpmNodeslist.length;++j){
+              var item = bpmNodeslist[j];
+              var id=item[0];
+              var orderNo = item[1];
+              var users = $("#"+id+"_UserName").attr("users");
+              var userId = getUserId(users,orderNo);
+              var kind = (j==bpmNodeslist.length-1?1:0);
+
+              if(!userId || userId==""){
+                api.toast({
+                  msg : '第'+orderNo+"步审批人未选择",
+                  duration : 2000,
+                  location : 'bottom'
+                });
+                enableClickOnceBtn();
+                return ;
+              }
+          }
+
+          toast.loading({
+                title:"正在保存...",
+                duration:2000
+            },function(ret){
+
+            });
+
+          saveEntity();
+            // if(api.pageParam.processId && api.pageParam.processId!=""){
+            //   new Promise(updateEntity).then(saveBpmNode).then(deleteBpmNodes).then(saveUserLink).then(deleteUserLinks).then(saveSuccess);
+            // }else{
+            //   new Promise(createEntity).then(saveBpmNode).then(saveUserLink).then(saveSuccess);
+            // }
+      }
+
+      var masterEntityOp = new EntityBatchOp("BpmProcess","Name");
+      var detailsEntityOp = new EntityBatchOp("BpmNode","OrderNo,UserId,Kind");
+      var userLinkEntityOp = new EntityBatchOp("BpmProcessLink","","UserId");
+
+      function saveEntity(){
+        //master
+        var isCreate = true;
+        var ownerId="";
+        if(api.pageParam.processId && api.pageParam.processId!=""){
+            ownerId = api.pageParam.processId;
+            isCreate = false;
+        }else{
+            ownerId = GetUuid();
+        }
+
+        var entObj = {"Id":ownerId,
+              "ProjectId":api.pageParam.projectId,
+              "Code": api.pageParam.processCode,
+              "Name":$("#Name").val()
+            };
+         if(isCreate){
+           masterEntityOp.addEntity(entObj);
+         }else{
+            masterEntityOp.updateEntity(entObj);
+         }
+
+         //details
+         var bpmNodes = [];
+         for(var j=0;j<bpmNodeslist.length;++j){
+             var item = bpmNodeslist[j];
+             var id=item[0];
+             var orderNo = item[1];
+             var users = $("#"+id+"_UserName").attr("users");
+             var userId = getUserId(users,orderNo);
+             var kind = (j==bpmNodeslist.length-1?1:0);
+
+             var bpmNode = {"Id":id,"OrderNo":orderNo,"ProjectId":api.pageParam.projectId,
+             "ProcessId":ownerId,"UserId":userId,"Kind":kind};
+             bpmNodes.push(bpmNode);
+         }
+
+         var nowIds = bpmNodes.select("Id");
+         var addDetails = bpmNodes.subtractBy("Id",origNodeIds);
+         var updateDetails = bpmNodes.subtractBy("Id",addDetails.select("Id"));
+         var deleteDetails = origNodeIds.subtract(nowIds);
+
+         detailsEntityOp.addEntities(addDetails);
+         detailsEntityOp.updateEntities(updateDetails);
+         detailsEntityOp.deleteByIds(deleteDetails);
+
+         //links
+         var userLink = [];
+
+         var users = $("#UserNames").attr("users");
+         if(users){
+           var usersArray = JSON.parse(users);
+           if(usersArray.length>0){
+             for(var i=0;i<usersArray.length;++i){
+                 var userId = usersArray[i][0];
+                 userLink.push({"Id":GetUuid(),"ProcessId":ownerId,"UserId":userId,"ProjectId":api.pageParam.projectId});
+             }
+           }
+         }
+
+         var nowUserIds = userLink.select("UserId");
+         var addUserLinks = userLink.subtractBy("UserId",orginUserIds);
+         var deleteLinks = orginUserIds.subtract(nowUserIds);
+
+         userLinkEntityOp.addEntities(addUserLinks);
+         userLinkEntityOp.deleteByFields(deleteLinks);
+
+         AjaxApi.batchSave([masterEntityOp,detailsEntityOp,userLinkEntityOp],[],
+           {"RelateModels":"BpmProcessLink,BpmNode","noTips":true},function(data){
+              saveSuccess();
+         });
+      }
+
+      function reloadParent(){
+        try{
+        api.execScript({
+          name: 'app_bpmprocesses',
+          script: 'loadData()'
+         });
+        }catch(e){}
+      }
+
+      function saveSuccess(){
+        api.toast({
+            msg : "流程更新成功!",
+            duration : 1000,
+            location : 'bottom'
+          });
+
+      setTimeout(function(){reloadParent();api.closeWin();},1000);
+      }
+
+
+
+      // function createEntity(resolve, reject){
+      //   var ownerId = GetUuid();
+      //   var entObj = {"Id":ownerId,
+      //         "ProjectId":api.pageParam.projectId,
+      //         "Code": api.pageParam.processCode,
+      //         "Name":$("#Name").val()
+      //       };
+      //   AjaxApi.rest("createEntity","BpmProcess",entObj,function(data){
+      //       resolve(ownerId);
+      //   },{"noTips":true});
+      // }
+      //
+      // function updateEntity(resolve, reject){
+      //   var entObj = {"Id": api.pageParam.processId,
+      //         "Name":$("#Name").val()
+      //       };
+      //   AjaxApi.rest("updateEntity","BpmProcess",entObj,function(data){
+      //       resolve(api.pageParam.processId);
+      //   },{"DataUpdateColumn":"Name","RelateModels":"BpmProcessLink,BpmNode","noTips":true});
+      // }
+      //
+      // function saveBpmNode(ownerId){
+      //
+      //
+      //     return new Promise(function(resolve, reject) {
+      //       if(bpmNodes.length>0){
+      //         AjaxApi.rest("saveEntities","BpmNode",bpmNodes,function(data){
+      //             resolve(ownerId);
+      //         },{"noTips":true});
+      //       }else{
+      //         resolve(ownerId);
+      //       }
+      //     });
+      //  }
+      //
+      //  function deleteBpmNodes(ownerId){
+      //    return new Promise(function(resolve, reject) {
+      //       if(deleteIds.length>0){
+      //         AjaxApi.rest("deleteEntities","BpmNode",deleteIds,function(data){
+      //           api.toast({
+      //             msg : '流程更新成功',
+      //             duration : 2000,
+      //             location : 'bottom'
+      //           });
+      //
+      //           resolve(ownerId);
+      //
+      //         },{"noTips":true});
+      //       }else{
+      //         resolve(ownerId);
+      //       }
+      //    });
+      //  }
+      //
+      // function saveUserLink(ownerId){
+      //   return new Promise(function(resolve, reject) {
+      //    var userLink = [];
+      //
+      //    var users = $("#UserNames").attr("users");
+      //    if(users){
+      //      var usersArray = JSON.parse(users);
+      //      if(usersArray.length>0){
+      //        for(var i=0;i<usersArray.length;++i){
+      //            var userId = usersArray[i][0];
+      //            userLink.push({"Id":GetUuid(),"ProcessId":ownerId,"UserId":userId,"ProjectId":api.pageParam.projectId});
+      //        }
+      //      }
+      //    }
+      //
+      //    var nowUserIds = userLink.select("UserId");
+      //    var addUserLinks = userLink.subtractBy("UserId",orginUserIds);
+      //    var deleteLinks = orginUserIds.subtract(nowUserIds);
+      //
+      //    if(addUserLinks.length>0) {
+      //      AjaxApi.rest("createEntities","BpmProcessLink",addUserLinks,function(data){
+      //          resolve(deleteLinks);
+      //      },{"noTips":true});
+      //    }else{
+      //      resolve(deleteLinks);
+      //    }
+      //  });
+      // }
+      //
+      // function deleteUserLinks(deleteLinks){
+      // return new Promise(function(resolve, reject) {
+      //   var deleteLinkStr = "'"+deleteLinks.join("','")+"'";
+      //
+      //   if(deleteLinks.length>0){
+      //     AjaxApi.exec("query_9054",{"UserIds":deleteLinkStr},function(data){
+      //         resolve();
+      //     });
+      //   }else{
+      //     resolve();
+      //   }
+      // });
+      // }
+
+      var currSelectUserNodeId;
+      function selectUser(nodeid){
+         currSelectUserNodeId = nodeid;
+         var users = $("#"+nodeid).attr("users");
+
+         api.openWin({
+                      name: "app_selectuser",
+                      url: "selectuser.html",
+                      pageParam: {
+                          isFrame: false,
+                          srcWinName:"app_bpmnodes",
+                          srcFrameName:"",
+                          selectedUsers: (users?users:"[]"),
+                          includeSelf:true,
+                          projectId:api.pageParam.projectId
+                      },
+                      bgColor: '#FFFFFF',
+                      slidBackEnabled: false,
+                      vScrollBarEnabled:false,
+                      hScrollBarEnabled:false,
+                      delay: 0
+                  }
+          );
+      }
+
+      function setSelectUser(data){
+          $("#"+currSelectUserNodeId).attr("users",data);
+
+          var selectedUsers = JSON.parse(data);
+
+          var selectUserStr = "";
+          for(var i=0;i<selectedUsers.length;++i){
+            selectUserStr+=selectedUsers[i][1];
+          }
+
+          $("#"+currSelectUserNodeId).val(selectUserStr);
+      }
+
+      function selectUsers(nodeid){
+         currSelectUserNodeId = nodeid;
+         var users = $("#"+nodeid).attr("users");
+         var tags = $("#"+nodeid).attr("tags");
+
+         api.openWin({
+                      name: "app_selectusers",
+                      url: "selectusers.html",
+                      pageParam: {
+                          isFrame: false,
+                          srcWinName:"app_bpmnodes",
+                          srcFrameName:"",
+                          selectedUsers: (users?users:"[]"),
+                          tags:(tags?tags:"[]"),
+                          includeSelf:true,
+                          projectId:api.pageParam.projectId
+                      },
+                      bgColor: '#FFFFFF',
+                      slidBackEnabled: false,
+                      vScrollBarEnabled:false,
+                      hScrollBarEnabled:false,
+                      delay: 0
+                  }
+          );
+      }
+
+      function setSelectUsers(data,tagstr){
+          $("#"+currSelectUserNodeId).attr("users",data);
+          $("#"+currSelectUserNodeId).attr("tags",tagstr);
+
+          var selectedUsers = JSON.parse(data);
+
+          var selectUserStr = "";
+          for(var i=0;i<selectedUsers.length;++i){
+            selectUserStr+=selectedUsers[i][1]+",";
+          }
+
+          $("#"+currSelectUserNodeId).val(selectUserStr);
+      }
+
+  </script>
+  </html>

@@ -1,0 +1,165 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../css/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="../css/aui-pull-refresh.css" />
+    <style type="text/css">
+    </style>
+</head>
+<body>
+
+
+    <section class="aui-refresh-content">
+        <ul id="noticeContent" class="aui-list aui-media-list" style="background-color:#f5f5f5">
+<br/>  <br/><br/><br/><br/><br/><br/>  <br/><br/><br/><br/><br/>
+        </ul>
+
+        <!-- <div class="pull-action" id="pull-up_{{tplId}}">
+          <span class="am-icon-arrow-down pull-label"
+                id="pull-up-label_{{tplId}}">上拉加载更多</span>
+          <span class="am-icon-spinner am-icon-spin"></span>
+          </div> -->
+
+      </section>
+
+
+    <script id="noticeTpl" type="text/html">
+
+        {{each list}}
+        <li class="aui-list-item aui-list-item-middle" style="background-color:#ffffff;" onclick="viewNotice('{{$value[0]}}',{{$value[7]}},'{{$value[8]}}')">
+            <div id="dot_{{$value[0]}}" class="aui-left-1 aui-dot aui-pull-left " style="display:none"></div>
+            <div class="aui-media-list-item-inner">
+                <div class="aui-list-item-inner">
+                    <div class="aui-list-item-text">
+                        <div class="aui-list-item-title">
+                          <span id='{{$value[8]}}' class="aui-font-size-12 aui-label-danger aui-label-outlined"
+                                   {{if $value[7] ==1}} style="display:none" {{/if}}   >未读</span>
+                          {{$value[1]}}</div>
+                        <div class="aui-list-item-right">{{$value[2]}}</div>
+                    </div>
+                    <div class="aui-list-item-text aui-font-size-12">
+                      已阅（{{$value[3]}}） 未阅（{{$value[4]}}） 比例（{{$value[5]}}%）
+                    </div>
+                </div>
+            </div>
+        </li>
+
+        {{/each}}
+    </script>
+
+    <!-- {{if $value[6] ==0}}{{/if}} -->
+</body>
+<script type="text/javascript" src="../script/api.js" ></script>
+<script type="text/javascript" src="../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../script/common.js'></script>
+<script type='text/javascript' src='../script/queryapi.js'></script>
+<script type='text/javascript' src='../script/template.js'></script>
+<script type="text/javascript" src="../script/aui-pull-refresh.js"></script>
+<script type="text/javascript" src="../script/aui-scroll.js" ></script>
+<script type='text/javascript' src='../script/controls.js'></script>
+<script type="text/javascript">
+
+var pageComp = new PageComponent(0,10,loadNotices);
+
+apiready = function () {
+  initPull();
+  initPullBottom();
+  pageComp.load();
+}
+
+function initPull(){
+  var pullRefresh = new auiPullToRefresh({
+    container: document.querySelector('.aui-refresh-content'),
+    triggerDistance: 100
+},function(ret){
+    if(ret.status=="success"){
+      pageComp.load();
+      setTimeout(function(){
+        pullRefresh.cancelLoading(); //刷新成功后调用此方法隐藏
+      },1500);
+    }
+})
+}
+
+function loadData(){
+  pageComp.load();
+}
+
+function initPullBottom(){
+  var scroll = new auiScroll({
+          listen:true,
+          distance:5 //判断到达底部的距离，isToBottom为true
+      },function(ret){
+          if(ret.isToBottom){
+            pageComp.loadMore();
+            //alert("已到达底部");
+              //document.getElementById("demo").textContent = "已到达底部";
+          }else{
+              //document.getElementById("demo").textContent = "滚动高度："+ret.scrollTop;
+
+          }
+
+      });
+
+}
+
+function loadNotices(pagecomp){
+    pagecomp.setLoadState(true);
+    var param = $.extend(pagecomp.getPageParam(),TServerInfo.getProjUserParam());
+    AjaxApi.query("query_1101",param,function(data){
+      if(data.total) pagecomp.setTotal(data.total);
+
+      var datalist = data.list;
+      if(datalist){
+        var tplData = {
+          "list" : datalist
+        };
+        var html = template("noticeTpl", tplData);
+
+        if(pagecomp.getIsAppend()){
+          $("#noticeContent").append(html);
+        }else{
+          $("#noticeContent").html(html);
+        }
+      }
+      pagecomp.setLoadState(false);
+      AjaxApi.getredpoint("OaNotice",1);
+    });
+}
+
+function viewNotice(id,isview,linkid){
+  if(isview == 0){
+    //modify
+    AjaxApi.rest("updateEntity","OaNoticeLink",{"Id":linkid,"IsView":1},function(data){
+
+    },{"DataUpdateColumn":"IsView","noTips":true});
+
+    $("#"+linkid).css("display","none");
+  }
+
+  api.openWin({
+                name: "app_notice_view",
+                url: "noticeview_win.html",
+                pageParam: {
+                    isFrame: false,
+                    noticeId:id
+                },
+                bgColor: '#FFFFFF',
+                slidBackEnabled: false,
+                vScrollBarEnabled:false,
+                hScrollBarEnabled:false,
+                delay: 0
+            }
+    );
+
+    AjaxApi.removeredpoint(id,"OaNotice");
+}
+
+</script>
+</html>

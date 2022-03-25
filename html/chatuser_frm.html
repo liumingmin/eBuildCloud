@@ -1,0 +1,344 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <style type="text/css">
+        .aui-list .aui-list-item-media {
+            width: 3rem;
+        }
+        .notes-add {
+            position: fixed;
+            left: 0.5rem;
+            bottom: 0.5rem;
+            width: 3rem;
+            z-index: 99;
+        }
+        textarea {
+            height: 8rem;
+            background-color: #ffffff;
+            padding: 0.5rem;
+        }
+        .photos img {
+            display: block;
+            width: 100%;
+        }
+        .add-photos > div {
+            width: 100%;
+            height:5.15rem;
+            line-height: 5.15rem;
+        }
+        .add-photos > div .aui-iconfont {
+            font-size: 2rem;
+            color: #ccc;
+        }
+        .image-item {
+            position: relative;
+            height: 5.3rem;
+            overflow: hidden;
+            background-color: #f0f0f0;
+        }
+        .image-item img {
+            display: block;
+            margin: 0 auto;
+            width: auto;
+            height: 100%;
+        }
+        .image-item .delete-btn {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 28px;
+            height: 28px;
+            background-color: rgba(0,0,0,0.7);
+            margin-left: -14px;
+            margin-top: -14px;
+            color: #ffffff;
+            text-align: center;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+<section class="aui-content-padded">
+<span id="joinedUserContent"   >
+
+</span>
+
+<div  style="margin-top:10px !important;margin-left:10px;display:inline-block !important" onclick="addMember()">
+  <div align="center"><img src="../image/addImg.png"   class="aui-avatar-size" /></div>
+  <div class="aui-text-center aui-font-size-14" style="width:100%">&nbsp;</div>
+</div>
+</section>
+
+<div class="aui-text-center  aui-margin-15" >
+<div class="aui-btn aui-btn-block aui-btn-danger" onclick="quit()">退出</div>
+</div>
+
+<script id="userTpl" type="text/html">
+  {{each list}}
+  <div id="{{$value[0]}}"  style="margin-top:10px !important;margin-left:10px;display:inline-block !important">
+    <div align="center"><img src="{{$value[3]}}"    class="aui-img-round aui-avatar-size"/></div>
+    <div class="aui-text-center aui-font-size-14" style="width:100%">{{$value[2]}}</div>
+  </div>
+  {{/each}}
+</script>
+
+
+</body>
+
+<script type='text/javascript' src='../script/api.js'></script>
+<script type="text/javascript" src="../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../script/common.js'></script>
+<script type='text/javascript' src='../script/queryapi.js'></script>
+<script type='text/javascript' src='../script/template.js'></script>
+<script type="text/javascript" src="../script/hammer.min.js"></script>
+<script type="text/javascript" src="../script/imageapi.js"></script>
+<script type="text/javascript" src="../script/aui-toast.js" ></script>
+<script type="text/javascript" src="../script/bluebird.min.js" ></script>
+    <script type='text/javascript'>
+var toast = new auiToast();
+var rong;
+var memberIdList=[];
+var creatorId="";
+var chatUserInfoMap={};
+    apiready = function(){
+        rong = api.require('rongCloud2');
+        chatUserInfoMap = JSON.parse(api.pageParam.chatUserInfoMap);
+        loadUsers(api.pageParam.conversationId);
+    }
+
+    function preProceImage(datalist){
+        for(var i=0;i<datalist.length;++i){
+            var item = datalist[i];
+            if(item[3]=="")
+                item[3] = "../image/user.jpg";
+        }
+    }
+
+    function loadUsers(conversationId){
+        rong.getDiscussion({
+          discussionId: conversationId
+      }, function(ret, err) {
+          if (ret.status == 'success'){
+                var chatUsers = [];
+                 creatorId = ret.result["creatorId"];
+                 memberIdList = ret.result["memberIdList"];
+                 memberIdList.moveToFirst(creatorId);
+
+                 for(var i=0;i<memberIdList.length;++i){
+                     var chatUserInfo = chatUserInfoMap[memberIdList[i]];
+                     if(chatUserInfo!=null){
+                       chatUsers.push(chatUserInfo);
+                     }
+                 }
+
+                preProceImage(chatUsers);
+
+                 var tplData = {
+                   "list" :chatUsers
+                 };
+                 var html = template("userTpl", tplData);
+
+                 $("#joinedUserContent").html(html);
+
+                 addRemoveListener(chatUsers);
+          }
+      });
+    }
+
+    function addMember(){
+      api.openWin({
+                   name: "app_selectusers",
+                   url: "../selectusers.html",
+                   pageParam: {
+                       isFrame: false,
+                       srcWinName:"chatuser_win",
+                       srcFrameName:"chatuser_frm",
+                       selectedUsers: "[]",
+                       tags:"[]",
+                       excludeIds:JSON.stringify(memberIdList)
+                   },
+                   bgColor: '#FFFFFF',
+                   slidBackEnabled: false,
+                   vScrollBarEnabled:false,
+                   hScrollBarEnabled:false,
+                   delay: 0
+               }
+       );
+    }
+
+    function setSelectUsers(data,tagstr){
+        var selectedUsers = JSON.parse(data);
+        if(selectedUsers.length ==0)
+            return ;
+
+        var chatUsers = [];
+        for(var i=0;i<selectedUsers.length;++i){
+           var item = selectedUsers[i];
+           var imageUrl = "";
+           if(item[2] && item[2]!=null && item[2]!=""){
+             imageUrl = ImageApi.getGlobleImageUrl(item[0],item[2]);
+           }
+
+           chatUsers.push([item[0],item[2],item[1],imageUrl]);
+        }
+        var toAddUserIds= selectedUsers.select(0);
+        rong.addMemberToDiscussion({
+          discussionId: api.pageParam.conversationId,
+          userIdList:toAddUserIds
+      }, function(ret, err) {
+          if (ret.status == 'success')
+              {
+                memberIdList = memberIdList.concat(toAddUserIds);
+                renderAppend(chatUsers);
+              }
+          else
+              api.toast({ msg: err.code });
+      });
+
+
+    }
+
+    function renderAppend(chatUsers){
+      preProceImage(chatUsers);
+      var tplData = {
+        "list" :chatUsers
+      };
+      var html = template("userTpl", tplData);
+
+      $("#joinedUserContent").append(html);
+
+      addRemoveListener(chatUsers);
+    }
+
+    function addRemoveListener(datalist){
+      if(creatorId != TServerInfo.getUserId()){
+        // api.toast({
+        //         msg : '您不是会议创建人'
+        // });
+        return ;
+      }
+
+      for(var i=0;i<datalist.length;++i){
+          var item = datalist[i];
+          longpressRemove($("#"+item[0])[0]);
+      }
+    }
+
+    function longpressRemove(obj){
+      var hammertime = new Hammer(obj);
+      hammertime.on("press", function(e) {
+              api.confirm({
+                      title : '温馨提示',
+                      msg : '您确定要将用户移出会议吗？',
+                      buttons : [ '取消', '确定']
+              }, function(ret, err) {
+                      if (ret.buttonIndex == 2) {
+                        rong.removeMemberFromDiscussion({
+                            discussionId: api.pageParam.conversationId,
+                            userId: obj.id
+                            }, function(ret, err) {
+                              if (ret.status == 'success')  {
+                                memberIdList.splice($.inArray(obj.id,memberIdList),1);
+                                $(obj).remove();
+                                api.toast({
+                                        msg : '移出成功！'
+                                });
+                              }else
+                              api.toast({ msg: err.code });
+                            });
+
+                      }
+              });
+      });
+    }
+
+    function quit(){
+      if(creatorId == TServerInfo.getUserId()){
+        rong.quitDiscussion({
+          discussionId: api.pageParam.conversationId
+        }, function(ret, err) {
+          if (ret.status == 'success'){
+                reloadContact();
+                api.closeToWin({
+                  name: 'root'
+                });
+              }
+          else
+              api.toast({ msg: err.code });
+        });
+      }else{
+        rong.removeMemberFromDiscussion({
+            discussionId: api.pageParam.conversationId,
+            userId: TServerInfo.getUserId()
+            }, function(ret, err) {
+              if (ret.status == 'success')  {
+                reloadContact();
+                api.closeToWin({
+                  name: 'root'
+                });
+              }else
+              api.toast({ msg: err.code });
+            });
+      }
+    }
+
+    function reloadContact(){
+        try{
+        api.execScript({
+          name: 'root',
+          frameName: 'index.contact',
+          script: 'loadConversations()'
+         });
+        }catch(e){}
+    }
+
+    function enableClickOnceBtn(){
+      try{
+      api.execScript({
+        name: 'chatuser_win',
+        script: 'enableClickOnceBtn()'
+       });
+      }catch(e){}
+    }
+
+    function commit()
+    {
+        toast.loading({
+              title:"正在保存...",
+              duration:2000
+          },function(ret){
+
+          });
+
+
+      //saveNotice();
+    }
+
+    function saveSuccess(){
+      api.toast({
+          msg : "提交成功!",
+          duration : 1000,
+          location : 'bottom'
+        });
+
+    setTimeout(function(){api.closeWin();},1000);
+    }
+
+    // function reloadParent(){
+    //   try{
+    //   api.execScript({
+    //     name: 'root',
+    //     frameName: 'index.contact',
+    //     script: 'loadData()'
+    //    });
+    //   }catch(e){}
+    // }
+
+
+    </script>
+</html>

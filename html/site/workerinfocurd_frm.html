@@ -1,0 +1,394 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <style type="text/css">
+    .aui-list .aui-list-item-media {
+        width: 3rem;
+    }
+    .notes-add {
+        position: fixed;
+        left: 0.5rem;
+        bottom: 0.5rem;
+        width: 3rem;
+        z-index: 99;
+    }
+    textarea {
+        height: 8rem;
+        background-color: #ffffff;
+        padding: 0.5rem;
+    }
+    .photos img {
+        display: block;
+        width: 100%;
+    }
+    .add-photos > div {
+        width: 100%;
+        height:5.15rem;
+        line-height: 5.15rem;
+    }
+    .add-photos > div .aui-iconfont {
+        font-size: 2rem;
+        color: #ccc;
+    }
+    .image-item {
+        position: relative;
+        height: 5.3rem;
+        overflow: hidden;
+        background-color: #f0f0f0;
+    }
+    .image-item img {
+        display: block;
+        margin: 0 auto;
+        width: auto;
+        height: 100%;
+    }
+    .image-item .delete-btn {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 28px;
+        height: 28px;
+        background-color: rgba(0,0,0,0.7);
+        margin-left: -14px;
+        margin-top: -14px;
+        color: #ffffff;
+        text-align: center;
+        border-radius: 50%;
+    }
+    </style>
+</head>
+<body>
+  <section class="aui-content-padded">
+    <ul class="aui-list aui-form-list">
+        <li class="aui-list-item">
+            <div class="aui-list-item-inner">
+                <div class="aui-list-item-label">
+                    *姓名
+                </div>
+                <div class="aui-list-item-input" required="required">
+                    <input id="Name" type="text" placeholder="(必填)">
+                </div>
+            </div>
+        </li>
+        <li class="aui-list-item">
+            <div class="aui-list-item-inner">
+                <div class="aui-list-item-label">
+                     证件号码
+                </div>
+                <div class="aui-list-item-input">
+                    <input id="IDCard" type="text" placeholder="证件号码" maxlength="19" onkeyup="value=value.replace(/[^\dXx]/g,'');">
+                </div>
+            </div>
+        </li>
+        <li class="aui-list-item">
+            <div class="aui-list-item-inner">
+                <div class="aui-list-item-label">
+                     地址
+                </div>
+                <div class="aui-list-item-input">
+                    <input id="Address" type="text" placeholder="地址">
+                </div>
+            </div>
+        </li>
+    </ul>
+  </section>
+
+  <section class="aui-content-padded">
+    <ul class="aui-list">
+        <li class="aui-list-item">
+            <div class="aui-list-item-inner">
+                <div class="aui-list-item-label">
+                     手机号
+                </div>
+                <div class="aui-list-item-input">
+                    <input id="PhoneNo" type="tel" maxlength="11" onkeyup="value=value.replace(/[^\d]/g,'');" placeholder="手机号">
+                </div>
+            </div>
+        </li>
+
+        <li class="aui-list-item">
+            <div class="aui-list-item-inner " tapmode onclick="toModifyWorkerKind()">
+                <div class="aui-list-item-label">
+                     *工种
+                </div>
+                <div class="aui-list-item-input aui-list-item-arrow">
+                      <input id="Kind" type="text" readonly=true value=""  />
+                </div>
+            </div>
+        </li>
+
+        <li class="aui-list-item">
+            <div class="aui-list-item-inner">
+              <div class="aui-list-item-label">
+                  *日工资
+              </div>
+              <div class="aui-list-item-input">
+                <input id="DailyWages" type="number" max="11">
+              </div>
+            </div>
+        </li>
+        <li class="aui-list-item">
+            <div class="aui-list-item-inner">
+                <div class="aui-list-item-label">
+                     备注
+                </div>
+                <div class="aui-list-item-input">
+                    <input id="Remark" type="text">
+                </div>
+            </div>
+        </li>
+    </ul>
+  </section>
+
+  <p class="aui-margin-l-15 aui-margin-t-15">证件照片(长按可删除图片) </p>
+  <section class="aui-content-padded">
+    <div id="imageLists"  class="aui-row aui-row-padded">
+        <div id="txtImage" class="aui-col-xs-4 add-photos" onclick="ImageApi.fastSelectImage({},'txtImage',true);">
+            <div class="aui-border aui-text-center">
+                <i class="aui-iconfont aui-icon-plus"></i>
+            </div>
+        </div>
+    </div>
+  </section>
+
+  <script id="noticeImageTpl" type="text/html">
+
+      {{each list}}
+
+      <div class="aui-col-xs-4 image-item">
+        <img id="{{$value[2]}}" flag="1" src="{{$value[1]}}" class="notes-image" >
+      </div>
+
+      {{/each}}
+  </script>
+</body>
+
+<script type='text/javascript' src='../../script/api.js'></script>
+<script type="text/javascript" src="../../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../../script/common.js'></script>
+<script type='text/javascript' src='../../script/queryapi.js'></script>
+<script type='text/javascript' src='../../script/template.js'></script>
+<script type="text/javascript" src="../../script/hammer.min.js"></script>
+<script type="text/javascript" src="../../script/imageapi.js"></script>
+<script type="text/javascript" src="../../script/aui-toast.js" ></script>
+<script type="text/javascript" src="../../script/bluebird.min.js" ></script>
+
+<script type='text/javascript'>
+var toast = new auiToast();
+var deleteImageIds=[];
+apiready = function(){
+  api.parseTapmode();
+
+  if(api.pageParam.workerInfoId){
+    loadWorkerInfo(api.pageParam.workerInfoId);
+    loadImages(api.pageParam.workerInfoId);
+  }
+}
+
+function loadWorkerInfo(id){
+
+  AjaxApi.rest("retrievEntity","SiteWorkerInfo",id,function(data){
+
+    $("#Name").val(data.Name);
+    $("#IDCard").val(data.IDCard);
+    $("#Address").val(data.Address);
+    $("#PhoneNo").val(data.PhoneNo);
+    $("#Kind").val(data.Kind);
+    $("#DailyWages").val(data.DailyWages);
+    $("#Remark").val(data.Remark);
+
+  });
+
+
+}
+
+function preImageUrl(datalist)
+{
+  var picIndex = 1;
+    for (var i = 0; i < datalist.length; i++) {
+      var item = datalist[i];
+      if(item[picIndex] && item[picIndex]!=""){
+        item[picIndex] = ImageApi.getImageUrl(item[0],item[picIndex]);
+      }else{
+        item[picIndex]="image/project.jpg";
+      }
+    }
+}
+
+function loadImages(ownerId){
+  AjaxApi.query("query_1006",{"OwnerId":ownerId},function(data){
+      var datalist = data.list;
+      if(datalist&& datalist.length>0){
+        preImageUrl(datalist);
+        var tplData = {
+          "list" : datalist
+        };
+        var html = template("noticeImageTpl", tplData);
+        $("#txtImage").before(html);
+
+        for (var i = 0; i < datalist.length; i++) {
+            var item = datalist[i];
+            ImageApi.addImagePress(document.getElementById(item[2]));
+            deleteImageIds.push(item[2]);
+        }
+      }
+    });
+}
+
+function showMsg(msg){
+  api.toast({
+      msg : msg,
+      duration : 1000,
+      location : 'bottom'
+    });
+}
+
+function enableClickOnceBtn(){
+  try{
+  api.execScript({
+    name: 'workerinfocurd_win',
+    script: 'enableClickOnceBtn()'
+   });
+  }catch(e){}
+}
+
+function commit()
+{
+
+  if($("#Name").val() == ""){
+    showMsg("姓名必填!");
+    enableClickOnceBtn();
+    return ;
+  }
+
+  if($("#Kind").val() == ""){
+    showMsg("工种必填!");
+    enableClickOnceBtn();
+    return ;
+  }
+
+  if($("#DailyWages").val() == ""){
+    showMsg("日工资必填!");
+    enableClickOnceBtn();
+    return ;
+  }
+
+  toast.loading({
+        title:"正在保存...",
+        duration:2000
+    },function(ret){
+
+    });
+
+    saveWorkerInfo();
+}
+
+var workerInfoEntityOp = new EntityBatchOp("SiteWorkerInfo","Name,Kind,DailyWages,IDCard,Address,PhoneNo,Remark");
+var attachmentEntityOp = CreateAttachEntBatchOp();
+
+function saveWorkerInfo(){
+  var ownerId = api.pageParam.workerInfoId;
+  if(api.pageParam.workerInfoId && api.pageParam.workerInfoId!=""){
+    var entObj = {"Id":api.pageParam.workerInfoId,
+          "Name":$("#Name").val(),
+          "Kind":$("#Kind").val(),
+          "DailyWages":parseFloat($("#DailyWages").val()),
+          "IDCard":$("#IDCard").val(),
+          "Address":$("#Address").val(),
+          "PhoneNo":$("#PhoneNo").val(),
+          "Remark":$("#Remark").val()
+        };
+
+
+    workerInfoEntityOp.updateEntity(entObj);
+
+  }else{
+    ownerId = GetUuid();
+    var entObj = {"Id":ownerId,
+          "Name":$("#Name").val(),
+          "Kind":$("#Kind").val(),
+          "DailyWages":parseFloat($("#DailyWages").val()),
+          "IDCard":$("#IDCard").val(),
+          "Address":$("#Address").val(),
+          "PhoneNo":$("#PhoneNo").val(),
+          "Remark":$("#Remark").val(),
+          "ProjectId":TServerInfo.getProjectId(),
+          "CreateUserId":TServerInfo.getUserId()
+        };
+
+    workerInfoEntityOp.addEntity(entObj);
+
+  }
+
+  //images
+  var imageInfos = [];
+  $("#imageLists").find("img").each(function(){
+    var flag = $(this).attr("flag");
+    if(!(flag && flag==1)){
+      var imageInfo = ImageApi.getImageInfo($(this).attr("id"),$(this).attr("src"),"");
+      imageInfo["OwnerId"] = ownerId;
+      imageInfos.push(imageInfo);
+    }else{
+      deleteImageIds.removeItem($(this).attr("id"));
+    }
+  });
+
+  attachmentEntityOp.deleteByFields(deleteImageIds);
+
+  AjaxApi.batchSave([workerInfoEntityOp,attachmentEntityOp],imageInfos,
+    {"noTips":true},function(data){
+       saveSuccess();
+  });
+}
+
+function saveSuccess(){
+  api.toast({
+      msg : "提交成功!",
+      duration : 1000,
+      location : 'bottom'
+    });
+
+setTimeout(function(){reloadWorker();api.closeWin();},1000);
+}
+
+function toModifyWorkerKind(){
+  api.openWin({
+                name: "workerkind_win",
+                url: "workerkind_win.html",
+                pageParam: {
+                    isFrame: false,
+                    kind: $("#Kind").val()
+                },
+                bgColor: '#FFFFFF',
+                slidBackEnabled: false,
+                vScrollBarEnabled:false,
+                hScrollBarEnabled:false,
+                delay: 0
+            }
+    );
+}
+
+function setKind(kind){
+    $("#Kind").val(kind);
+  // AjaxApi.rest("retrievEntity","SiteWorkerKind",kind,function(data){
+  //
+  //   //$("#SubCategory").text(data.SubCategory);
+  // });
+}
+
+function reloadWorker(){
+  try{
+  api.execScript({
+    name: 'workerinfolist_win',
+    frameName: 'workerinfolist_frm',
+    script: 'loadData()'
+   });
+  }catch(e){}
+}
+
+</script>
+</html>

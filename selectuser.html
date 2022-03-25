@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+  <html>
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+      <title></title>
+      <link rel="stylesheet" type="text/css" href="css/app.css" />
+      <link rel="stylesheet" type="text/css" href="css/aui.css" />
+      <link rel="stylesheet" type="text/css" href="css/aui-pull-refresh.css" />
+      <style>
+          body{
+
+          }
+
+          .am-with-fixed-custheader {
+            padding-top: 4.4rem;
+          }
+      </style>
+  </head>
+  <body class="am-with-fixed-custheader aui-margin-l-0">
+    <div id="header" class="am-header-fixed" >
+    <header id="aui-header" class="aui-bar aui-bar-nav aui-bar-light">
+      <a class="aui-btn aui-pull-left" tapmode onclick="closeWin()">
+          <span class="aui-iconfont aui-icon-left"></span>
+      </a>
+    <div class="aui-title" >单选人员</div>
+
+    <a class="aui-btn aui-pull-right" tapmode onclick="selectUsers()">
+        <span class="aui-iconfont aui-icon-correct"></span>
+    </a>
+    </header>
+</div>
+
+<section class="aui-refresh-content " >
+    <ul id="userListContent" class="aui-list aui-media-list" style="background-color:#f5f5f5">
+
+<br/>  <br/><br/><br/><br/><br/><br/>  <br/><br/><br/><br/><br/>
+      </ul>
+</section>
+
+      <script id="userListTpl" type="text/html">
+
+          {{each list}}
+
+          <li class="aui-list-item aui-list-item-middle" style="background-color:#ffffff;">
+            <div class="aui-media-list-item-inner">
+              <div class="aui-list-item-media"  style="width:auto;">
+                <input class="aui-radio aui-margin-r-15" type="radio"  style="height:30px;width:30px;margin-top:5px;"
+                name="userCheck" realName="{{$value[2]}}" userId="{{$value[0]}}"/>
+                  <img src="{{$value[3]}}"   style="height:40px;width:40px" class="aui-img-round"/>
+              </div>
+              <div class="aui-list-item-inner">
+                <div class="aui-list-item-title">{{$value[2]}}({{$value[1]}})  </div>
+              </div>
+            </div>
+          </li>
+
+          {{/each}}
+      </script>
+  </body>
+  <script type="text/javascript" src="script/api.js" ></script>
+  <script type="text/javascript" src="css/amazeui/js/jquery.min.js"></script>
+  <script type='text/javascript' src='script/common.js'></script>
+  <script type='text/javascript' src='script/queryapi.js'></script>
+  <script type='text/javascript' src='script/template.js'></script>
+  <script type="text/javascript" src="script/imageapi.js"></script>
+  <script type="text/javascript" src="script/aui-pull-refresh.js"></script>
+  <script type="text/javascript">
+  function closeWin(){
+      api.closeWin({
+      });
+  }
+
+  var orginUsers = [];
+
+      apiready = function(){
+        var header = $api.byId('aui-header');
+        $api.fixStatusBar(header);
+
+        var height = $("#header").height();
+        $('body').css('padding-top', height);
+
+          orginUsers =JSON.parse(api.pageParam.selectedUsers);
+
+          initPull();
+          loadUsers();
+      };
+
+      function initPull(){
+        var pullRefresh = new auiPullToRefresh({
+          container: document.querySelector('.aui-refresh-content'),
+          triggerDistance: 100
+      },function(ret){
+          if(ret.status=="success"){
+            loadUsers();
+            setTimeout(function(){
+              pullRefresh.cancelLoading(); //刷新成功后调用此方法隐藏
+            },1500);
+          }
+      })
+      }
+
+      function preUsermageUrl(datalist)
+      {
+        var imageIdx = 3;
+          for (var i = 0; i < datalist.length; i++) {
+            var item = datalist[i];
+            if(item[imageIdx] && item[imageIdx]!=""){
+              item[imageIdx] = ImageApi.getGlobleImageUrl(item[0],item[imageIdx]);
+            }else{
+              item[imageIdx]="image/user.jpg";
+            }
+          }
+      }
+
+      function loadUsers(){
+          var projectId = api.pageParam.projectId;
+          if(!projectId){
+              projectId = TServerInfo.getProjectId();
+          }
+          var params = {"ProjectId":projectId};
+          if(!api.pageParam.includeSelf){
+            params["UserId"]=TServerInfo.getUserId();
+          }
+
+          AjaxApi.query("query_1007",params,function(data){
+            var datalist = data.list;
+            if(datalist){
+              preUsermageUrl(datalist);
+              var tplData = {
+                "list" : datalist
+              };
+              var html = template("userListTpl", tplData);
+              $("#userListContent").html(html);
+
+            }
+          });
+      }
+
+      function selectUsers(){
+         var users=[];
+        $("*[name='userCheck']").each(function(){
+            if(users.length>0)
+            return ;
+
+            if($(this).prop('checked')){
+                users.push([$(this).attr("userId"),$(this).attr("realName")]);
+            }
+        });
+
+        returnSelectUser(api.pageParam.srcWinName,api.pageParam.srcFrameName,JSON.stringify(users));
+        api.closeWin();
+      }
+
+  </script>
+  </html>

@@ -1,0 +1,212 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <style type="text/css">
+    .aui-list .aui-list-item-media {
+        width: 3rem;
+    }
+    .notes-add {
+        position: fixed;
+        left: 0.5rem;
+        bottom: 0.5rem;
+        width: 3rem;
+        z-index: 99;
+    }
+    textarea {
+        height: 8rem;
+        background-color: #ffffff;
+        padding: 0.5rem;
+    }
+    .photos img {
+        display: block;
+        width: 100%;
+    }
+    .add-photos > div {
+        width: 100%;
+        height:5.15rem;
+        line-height: 5.15rem;
+    }
+    .add-photos > div .aui-iconfont {
+        font-size: 2rem;
+        color: #ccc;
+    }
+    .image-item {
+        position: relative;
+        height: 5.3rem;
+        overflow: hidden;
+        background-color: #f0f0f0;
+    }
+    .image-item img {
+        display: block;
+        margin: 0 auto;
+        width: auto;
+        height: 100%;
+    }
+    .image-item .delete-btn {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 28px;
+        height: 28px;
+        background-color: rgba(0,0,0,0.7);
+        margin-left: -14px;
+        margin-top: -14px;
+        color: #ffffff;
+        text-align: center;
+        border-radius: 50%;
+    }
+    </style>
+</head>
+<body>
+
+  <section class="aui-content-padded">
+  <ul class="aui-list aui-form-list">
+  <li class="aui-list-item">
+      <div class="aui-list-item-inner">
+          <div class="aui-list-item-label">
+              任务进度:
+          </div>
+
+          <div class="aui-list-item-input">
+                <input  id="Progress" placeholder="" type="text" >
+          </div>
+      </div>
+  </li>
+  </ul>
+  </section>
+
+  <section class="aui-content-padded">
+    <textarea id="Content" style="height:8em;overflow-y:scroll;background-color:#ffffff;" placeholder="反馈内容"></textarea>
+  </section>
+  <p class="aui-margin-l-15 aui-margin-t-15">附件图片(长按可删除图片) </p>
+  <section class="aui-content-padded">
+    <div id="imageLists"  class="aui-row aui-row-padded">
+        <div id="txtImage" class="aui-col-xs-4 add-photos" onclick="ImageApi.fastSelectImage({},'txtImage',true);">
+            <div class="aui-border aui-text-center">
+                <i class="aui-iconfont aui-icon-plus"></i>
+            </div>
+        </div>
+    </div>
+  </section>
+
+
+</body>
+
+<script type='text/javascript' src='../script/api.js'></script>
+<script type="text/javascript" src="../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../script/common.js'></script>
+<script type='text/javascript' src='../script/queryapi.js'></script>
+<script type='text/javascript' src='../script/template.js'></script>
+<script type="text/javascript" src="../script/hammer.min.js"></script>
+<script type="text/javascript" src="../script/imageapi.js"></script>
+<script type="text/javascript" src="../script/aui-toast.js" ></script>
+<script type="text/javascript" src="../script/bluebird.min.js" ></script>
+
+<script type='text/javascript'>
+var toast = new auiToast();
+
+var priority=0;
+
+apiready = function(){
+
+}
+
+function showMsg(msg){
+  api.toast({
+      msg : msg,
+      duration : 1000,
+      location : 'bottom'
+    });
+}
+
+function enableClickOnceBtn(){
+  try{
+  api.execScript({
+    name: 'taskfdnew_win',
+    script: 'enableClickOnceBtn()'
+   });
+  }catch(e){}
+}
+
+function commit()
+{
+  if($("#Progress").val() == ""){
+      showMsg("进度必填!");
+      enableClickOnceBtn();
+    return ;
+  }
+
+  if($("#Content").val() == ""){
+      showMsg("反馈内容必填!");
+      enableClickOnceBtn();
+    return ;
+  }
+
+  toast.loading({
+        title:"正在保存...",
+        duration:2000
+    },function(ret){
+
+    });
+
+
+
+    saveTaskFeedback();
+}
+
+var masterEntityOp = new EntityBatchOp("OaTaskFeedback","Progress,Content");
+
+function saveTaskFeedback(){
+  var ownerId = GetUuid();
+
+  var entObj = {"Id":ownerId,
+        "TaskId":api.pageParam.taskId,
+        "Progress":$("#Progress").val(),
+        "Content":$("#Content").val(),
+        "ProjectId":TServerInfo.getProjectId(),
+        "UserId":TServerInfo.getUserId(),
+        "Kind":api.pageParam.taskKind
+      };
+  masterEntityOp.addEntity(entObj);
+
+  //images
+  var imageInfos = [];
+  $("#imageLists").find("img").each(function(){
+    var imageInfo = ImageApi.getImageInfo($(this).attr("id"),$(this).attr("src"),"");
+    imageInfo["OwnerId"] = ownerId;
+    imageInfos.push(imageInfo);
+  });
+
+  AjaxApi.batchSave([masterEntityOp],imageInfos,
+    {"noTips":true},function(data){
+       saveSuccess();
+  });
+}
+
+function saveSuccess(){
+  api.toast({
+      msg : "提交成功!",
+      duration : 1000,
+      location : 'bottom'
+    });
+
+setTimeout(function(){refreshParent();api.closeWin();},1000);
+}
+
+
+function refreshParent(){
+  try{
+    api.execScript({
+        name: 'taskfd_win',
+        frameName: 'taskfd_frm',
+        script: 'loadFeedback();'
+    });
+  }catch(e){}
+}
+
+</script>
+</html>

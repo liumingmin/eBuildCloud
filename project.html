@@ -1,0 +1,654 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="css/app.css" />
+    <link rel="stylesheet" type="text/css" href="css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="css/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/aui-pull-refresh.css" />
+    <style type="text/css">
+        .goods-title {
+            color: #757575 !important;
+        }
+        .goods-price {
+            color: #666666 !important;
+            font-weight: 700;
+        }
+
+        .am-with-fixed-tab {
+          padding-top: 4.45rem;
+        }
+
+    </style>
+</head>
+<body class="am-with-fixed-tab">
+  <div id="header" class="am-header-fixed">
+  <header id="aui-header" class="aui-bar aui-bar-nav aui-bar-light ">
+  <a class="aui-pull-left aui-btn">
+      <span class="aui-text-primary">
+        <!-- <i class="fa fa-lg  fa-minus-square-o"></i> -->
+      </span>
+  </a>
+  <div  class="aui-title" ><span id="worktitle" onclick="selectProject()">[选择项目]</span>&nbsp;<i onclick="selectProject()" class="fa aui-text-success  fa-refresh"></i></div>
+  <a class="aui-pull-right aui-btn ">
+
+    <span class="aui-iconfont aui-icon-plus"  onclick="openMenu()" ></span>
+  </a>
+  </header>
+  <div class="aui-tab " id="tab" >
+      <div class="aui-tab-item aui-active">我创建的</div>
+      <div class="aui-tab-item"><div id="badge_ProjectUser" class="aui-badge" style="left:70%;display:none;" ></div>我参与的</div>
+      <div class="aui-tab-item"><div id="badge_Request" class="aui-badge" style="left:70%;display:none;" ></div>项目通知</div>
+  </div>
+</div>
+<div >
+<section class="aui-refresh-content ">
+
+
+<!-- <p class="aui-text-left aui-margin-l-15 aui-margin-5">我创建的项目</p> -->
+  <section id="myprojectListContent"  name="projTabContent" class="aui-content">
+<br/>  <br/><br/><br/><br/><br/><br/>  <br/><br/><br/><br/><br/>
+  </section>
+
+    <section id="projectListContent"  name="projTabContent" class="aui-content" style="display:none">
+      <br/>  <br/><br/><br/><br/><br/><br/>  <br/><br/><br/><br/><br/>
+    </section>
+
+    <section id="projectRequestListContent" name="projTabContent" class="aui-content" style="display:none" >
+
+      <br/>  <br/><br/><br/><br/><br/><br/>  <br/><br/><br/><br/><br/>
+
+    </section>
+</section>
+<br/>  <br/>
+</div>
+
+<script id="myprojectListTpl" type="text/html">
+    {{each list}}
+    <div class="aui-card-list aui-border-t "  style="margin-bottom:1px;margin-top:0px">
+        <div class="aui-card-list-header aui-card-list-user">
+          <div class="aui-card-list-user-avatar" style="width:auto;margin-right:15px">
+              <img src="{{$value[3]}}"  style="width:50px;height:50px" class="aui-img-round"/>
+          </div>
+            <div class="aui-card-list-user-name">
+                <div class="aui-font-size-16">{{$value[1]}} </div>
+                <div class="aui-btn aui-btn-outlined aui-btn-info  aui-margin-r-10" onclick="updateProject('{{$value[0]}}','{{$value[1]}}')">管理</div>
+            </div>
+            <div class="aui-card-list-user-info">负责人:{{$value[2]}}</div>
+        </div>
+        <div class="aui-card-list-content aui-border-t" style="margin-left: 3.5rem;">
+            <ul class="aui-list aui-list-noborder">
+                <div class="aui-list-item aui-padded-l-0">
+                    <div class="aui-list-item-inner">
+                        <div class="aui-list-item-title aui-font-size-14 goods-title" style="width:15em">
+                          <div class="aui-row">
+                            <div class="aui-col-xs-6">工期：{{$value[6] | formatPercent}}</div>
+                            <div class="aui-col-xs-6">人工：{{$value[7]}}工日</div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="aui-list-item aui-padded-l-0" >
+                    <div class="aui-list-item-inner" >
+                        <div class="aui-list-item-title aui-font-size-14 goods-title" style="width:15em">
+                          <div class="aui-row">
+                            <div class="aui-col-xs-6">质量：{{$value[4]}}</div>
+                            <div class="aui-col-xs-6">安全：{{$value[5]}}</div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+            </ul>
+        </div>
+    </div>
+    {{/each}}
+</script>
+
+<script id="projectListTpl" type="text/html">
+    {{each list}}
+    <div class="aui-card-list aui-border-t  " style="margin-bottom:1px">
+        <div class="aui-card-list-header aui-card-list-user">
+          <div class="aui-card-list-user-avatar" style="width:auto;margin-right:15px">
+              <img src="{{$value[3]}}"  style="width:50px;height:50px" class="aui-img-round"/>
+          </div>
+            <div class="aui-card-list-user-name">
+                <div class="aui-font-size-16">{{$value[1]}} </div>
+                <div class="aui-btn aui-btn-outlined aui-btn-info  aui-margin-r-10" style="visibility:hidden">no</div>
+            </div>
+            <div class="aui-card-list-user-info">负责人:{{$value[2]}}</div>
+        </div>
+        <div class="aui-card-list-content aui-border-t" style="margin-left: 3.5rem;">
+            <ul class="aui-list aui-list-noborder">
+                <div class="aui-list-item aui-padded-l-0">
+                    <div class="aui-list-item-inner">
+                        <div class="aui-list-item-title aui-font-size-14 goods-title" style="width:15em">
+                          <div class="aui-row">
+                            <div class="aui-col-xs-6">工期：{{$value[6] | formatPercent }}</div>
+                            <div class="aui-col-xs-6">人工：{{$value[7]}}工日</div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="aui-list-item aui-padded-l-0">
+                    <div class="aui-list-item-inner">
+                        <div class="aui-list-item-title aui-font-size-14 goods-title" style="width:15em">
+                          <div class="aui-row">
+                            <div class="aui-col-xs-6">质量：{{$value[4]}}</div>
+                            <div class="aui-col-xs-6">安全：{{$value[5]}}</div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+            </ul>
+        </div>
+    </div>
+    {{/each}}
+</script>
+
+<script id="projectRequestListTpl" type="text/html">
+  {{each list}}
+  <div id="req_{{$value[0]}}" class="aui-card-list aui-border-t "  style="margin-bottom:1px">
+      <div class="aui-card-list-header aui-card-list-user">
+          <div class="aui-card-list-user-avatar aui-padded-t-5 ">
+              <img src=" {{if $value[1] ==0}} {{$value[10]}} {{else}} {{$value[9]}} {{/if}}" class="aui-img-round"   style="height:40px;width:40px" />
+          </div>
+          <div class="aui-card-list-user-name">
+
+              <div class="aui-font-size-16">{{if $value[1] ==0}} {{$value[7]}} {{else}} {{$value[6]}} {{/if}}  </div>
+              <div >
+                <div class="aui-btn aui-btn aui-btn-outlined aui-btn-info aui-padded-r-5 aui-margin-r-15" onclick="reject('{{$value[0]}}')"><i class="aui-iconfont aui-icon-close"></i></div>
+                <div class="aui-btn aui-btn aui-btn-outlined aui-btn-info aui-padded-r-5 " onclick="agree('{{$value[0]}}','{{$value[5]}}','{{$value[8]}}')"><i class="aui-iconfont aui-icon-correct"></i></div>
+              </div>
+
+          </div>
+          <div class="aui-card-list-user-info"> {{if $value[1] ==0}} 申请 {{else}} 邀请 {{/if}}
+            加入 {{$value[4]}}，附加消息:{{$value[3]}}</div>
+      </div>
+
+  </div>
+  {{/each}}
+</script>
+
+<div  class="aui-popup aui-popup-top-right " style="margin-top:2.45rem;z-index: 2010 !important;"  id="top-right" >
+<div class="aui-popup-arrow"></div>
+<div class="aui-popup-content">
+    <ul class="aui-list aui-list-noborder">
+        <li class="aui-list-item" onclick="createProject()">
+            <div class="aui-list-item-label-icon">
+                <i class="fa fa-plus-square-o aui-text-warning"></i>
+            </div>
+            <div class="aui-list-item-inner aui-list-item-middle">
+                创建项目
+            </div>
+        </li>
+        <li class="aui-list-item" onclick="appProject()">
+            <div class="aui-list-item-label-icon">
+                <i class="fa fa-user-plus aui-text-info"></i>
+            </div>
+            <div class="aui-list-item-inner">
+                申请加入
+            </div>
+        </li>
+    </ul>
+</div>
+</div>
+
+
+
+</body>
+<script type="text/javascript" src="script/api.js" ></script>
+<script type="text/javascript" src="css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='script/common.js'></script>
+<script type='text/javascript' src='script/queryapi.js'></script>
+<script type='text/javascript' src='script/template.js'></script>
+<script type="text/javascript" src="script/hammer.min.js"></script>
+<script type="text/javascript" src="script/imageapi.js"></script>
+<script type="text/javascript" src="script/aui-pull-refresh.js"></script>
+<script type="text/javascript" src="script/aui-tab.js"></script>
+<script type="text/javascript" src="script/aui-popup.js" ></script>
+<script type="text/javascript" src="script/aui-dialog.js" ></script>
+<script type="text/javascript" src="script/bluebird.min.js" ></script>
+
+<script type="text/javascript">
+//var moduleBadgeCnt = {};
+var popup;
+  var tabIndex = 1;
+  var tab1loaded = true;
+ var tab2loaded = false;
+ var tab3loaded=false;
+ var tab;
+ var isLoadRedPoint=true;
+
+ template.helper('formatPercent', formatPercent);
+
+var dialog = new auiDialog({})
+
+    apiready = function () {
+      var header = $api.byId('aui-header');
+      $api.fixStatusBar(header);
+
+      var height = $("#header").height();
+      $('body').css('padding-top', height);
+
+
+      createTab();
+
+      popup = new auiPopup();
+
+      loadMyProjects();
+
+      $("#top-right").css("display","none");
+
+      initPull();
+      //loadProjectRedItems();
+    }
+
+    function createTab(){
+       tab = new auiTab({
+        element:document.getElementById("tab"),
+    },function(ret){switchTab(ret["index"]);});
+    }
+
+    function switchTab(idx){
+      tabIndex = idx;
+      if(tabIndex == 1){
+        if(!tab1loaded) loadMyProjects();
+        tab1loaded = true;
+        hideTabContents();
+        $("#myprojectListContent").css("display","block");
+      }else if(tabIndex==2){
+        if(!tab2loaded) loadProjects();
+        tab2loaded=true;
+        hideTabContents();
+        $("#projectListContent").css("display","block");
+      }else if(tabIndex==3){
+        if(!tab3loaded) loadProjectsRequest();
+        tab3loaded=true;
+        hideTabContents();
+        $("#projectRequestListContent").css("display","block");
+      }
+
+      removeTabRedPoint(tabIndex);
+    }
+
+    function swithModuleGroup(){
+      setProjectInfo($api.getStorage("projectId"),$api.getStorage("projectName"));
+      //loadProjectRedItems();
+    }
+
+    function hideTabContents(){
+      $("*[name='projTabContent']").each(function(){
+        $(this).css("display","none");
+      });
+    }
+
+    function initPull(){
+      var pullRefresh = new auiPullToRefresh({
+        container: document.querySelector('.aui-refresh-content'),
+        triggerDistance: 100
+    },function(ret){
+        if(ret.status=="success"){
+          loadProjecsData();
+          setTimeout(function(){
+            pullRefresh.cancelLoading(); //刷新成功后调用此方法隐藏
+          },1500);
+        }
+    })
+    }
+
+    function loadProjecsData(){
+      if(tabIndex==1){
+        loadMyProjects();
+      }else if(tabIndex==2){
+        loadProjects();
+      }else if(tabIndex==3){
+        loadProjectsRequest();
+      }
+    }
+
+    function clearUserData(){
+      $("#myprojectListContent").html(gWhitespaceHtml);
+      $("#projectListContent").html(gWhitespaceHtml);
+      $("#projectRequestListContent").html(gWhitespaceHtml);
+
+       tab1loaded = false;
+      tab2loaded = false;
+      tab3loaded=false;
+    }
+
+    function preProImageUrl(datalist)
+    {
+        for (var i = 0; i < datalist.length; i++) {
+          var item = datalist[i];
+          if(item[3] && item[3]!=""){
+            item[3] = ImageApi.getGlobleImageUrl(item[0],item[3]);
+          }else{
+            item[3]="image/project.jpg";
+          }
+
+        }
+    }
+
+    function loadMyProjects(){
+        AjaxApi.query("query_1002",{"UserId":TServerInfo.getUserId()},function(data){
+          var datalist = data.list;
+          if(datalist){
+            preProImageUrl(datalist);
+            var tplData = {
+              "list" : datalist
+            };
+            var html = template("myprojectListTpl", tplData);
+            $("#myprojectListContent").html(html);
+
+          }
+          else{
+            $("#myprojectListContent").html(gWhitespaceHtml);
+          }
+        });
+    }
+
+    function loadProjects(){
+        AjaxApi.query("query_1001",{"UserId":TServerInfo.getUserId()},function(data){
+          var datalist = data.list;
+          if(datalist){
+            preProImageUrl(datalist);
+            var tplData = {
+              "list" : datalist
+            };
+            var html = template("projectListTpl", tplData);
+            $("#projectListContent").html(html);
+
+            for(var i=0;i<datalist.length;++i){
+              AjaxApi.removeredpoint(datalist[i][0]);
+            }
+
+          }else{
+            $("#projectListContent").html(gWhitespaceHtml);
+          }
+        });
+    }
+
+    function preUsermageUrl(datalist)
+    {
+      //9为项目主的picid，11为userid
+        for (var i = 0; i < datalist.length; i++) {
+          var item = datalist[i];
+          if(item[9] && item[9]!=""){
+            item[9] = ImageApi.getGlobleImageUrl(item[11],item[9]);
+          }else{
+            item[9]="image/user.jpg";
+          }
+
+          if(item[10] && item[10]!=""){
+            item[10] = ImageApi.getGlobleImageUrl(item[12],item[10]);
+          }else{
+            item[10]="image/user.jpg";
+          }
+        }
+    }
+
+    function loadProjectsRequest(){
+      AjaxApi.query("query_1003",{"UserId":TServerInfo.getUserId()},function(data){
+        var datalist = data.list;
+        if(datalist){
+          preUsermageUrl(datalist);
+          var tplData = {
+            "list" : datalist
+          };
+          var html = template("projectRequestListTpl", tplData);
+          $("#projectRequestListContent").html(html);
+
+        }else{
+          $("#projectRequestListContent").html(gWhitespaceHtml);
+        }
+      });
+    }
+
+    function openMenu(){
+       popup.show($("#top-right")[0]);
+    }
+
+    function createProject(){
+      popup.hide($("#top-right")[0]);
+      api.openWin({
+                    name: "app_project",
+                    url: "html/projectcurd_win.html",
+                    pageParam: {
+                        isFrame: false
+                    },
+                    bgColor: '#FFFFFF',
+                    slidBackEnabled: false,
+                    vScrollBarEnabled:false,
+                    hScrollBarEnabled:false,
+                    delay: 0
+                }
+        );
+    }
+
+    function updateProject(id,name){
+      api.openWin({
+                    name: "app_project",
+                    url: "html/projectcurd_win.html",
+                    pageParam: {
+                        isFrame: false,
+                        projectId:id,
+                        projectName:name
+                    },
+                    bgColor: '#FFFFFF',
+                    slidBackEnabled: false,
+                    vScrollBarEnabled:false,
+                    hScrollBarEnabled:false,
+                    delay: 0
+                }
+        );
+
+    }
+
+    function reject(id){
+      AjaxApi.rest("updateEntity","ProjectJoinRequest",{"Id":id,"Result":-1},function(data){
+          api.toast({
+            msg : '已拒绝',
+            duration : 2000,
+            location : 'bottom'
+          });
+          $("#req_"+id).remove();
+          AjaxApi.removeredpoint(id);
+          //loadProjectRedItems();
+        },{"DataUpdateColumn":"Result","noTips":true});
+
+    }
+
+    function agree(id,joinuserId,projectId){
+      AjaxApi.rest("updateEntity","ProjectJoinRequest",{"Id":id,"Result":1},function(data){
+          api.toast({
+            msg : '已通过',
+            duration : 2000,
+            location : 'bottom'
+          });
+          $("#req_"+id).remove();
+          AjaxApi.removeredpoint(id);
+          //loadProjectRedItems();
+      },{"DataUpdateColumn":"Result","noTips":true});
+      //var guid = GetUuid();
+      //  new Promise(function(resolve, reject){resolve(id);}).then(agree_updateReq);//.then(agree_queryLink).then(agress_createLink);[id,guid,projectId,joinuserId]
+    }
+
+    // function agree_updateReq(id){
+    //   return new Promise(function(resolve, reject) {
+    //     AjaxApi.rest("updateEntity","ProjectJoinRequest",{"Id":id,"Result":1},function(data){
+    //         resolve(pdata);
+    //     },{"DataUpdateColumn":"Result","noTips":true});
+    //   });
+    // }
+
+    // function agree_queryLink(pdata){
+    //   return new Promise(function(resolve, reject) {
+    //     var queryparam = {"ProjectId":pdata[2],"UserId":pdata[3]};
+    //
+    //      AjaxApi.rest("queryEntities","ProjectUserLink",queryparam,function(data){
+    //        if(data && data.length>0){
+    //          api.toast({
+    //            msg : '已加入该项目',
+    //            duration : 2000,
+    //            location : 'bottom'
+    //          });
+    //          $("#req_"+pdata[0]).remove();
+    //        }else{
+    //          resolve(pdata);
+    //        }
+    //      });
+    //   });
+    // }
+    //
+    // function agress_createLink(pdata){
+    //   AjaxApi.rest("createEntity","ProjectUserLink",{"Id":pdata[1],"ProjectId":pdata[2],"UserId":pdata[3]},function(data){
+    //     api.toast({
+    //       msg : '已通过',
+    //       duration : 2000,
+    //       location : 'bottom'
+    //     });
+    //
+    //     $("#req_"+pdata[0]).remove();
+    //   },{"noTips":true});
+    // }
+
+    function appProject(){
+      //
+            dialog.prompt({
+                  title:"输入项目全名",
+                  text:'',
+                  buttons:['取消','确定']
+              },function(ret){
+                  if(ret.buttonIndex == 2){
+                      var projectName = ret.text;
+                      AjaxApi.rest("queryEntities","Project",{"Name":projectName},function(data){
+                          if(data && data.length>0){
+                            var projectobj = data[0];
+                            sendJoinProjectReq(projectobj);
+                          }else{
+                            api.toast({
+                              msg : '项目不存在',
+                              duration : 2000,
+                              location : 'bottom'
+                            });
+                          }
+                        });
+                  }
+                  popup.hide($("#top-right")[0]);
+
+              })
+    }
+
+    function sendJoinProjectReq(projectobj){
+      if(projectobj["CreateUserId"] == TServerInfo.getUserId()){
+        api.toast({
+          msg : '不能申请加入自己的项目',
+          duration : 2000,
+          location : 'bottom'
+        });
+        return;
+      }
+
+      var guid = GetUuid();
+      AjaxApi.rest("createEntity","ProjectJoinRequest",{"Id":guid,"ProjectId":projectobj["Id"],"JoinUserId":TServerInfo.getUserId(),
+      "ProjectUserId":projectobj["CreateUserId"],"Msg":""},function(data){
+        api.toast({
+          msg : '已发送',
+          duration : 2000,
+          location : 'bottom'
+        });
+      },{"noTips":true});
+    }
+
+
+    function loadProjectRedItems(){
+      if(!isLoadRedPoint)
+        return ;
+        isLoadRedPoint = false;
+        setTimeout(function(){isLoadRedPoint = true;}, 10000 );
+
+      if(TServerInfo.getUserId() && TServerInfo.getUserId()!=""
+            && TServerInfo.getProjectId() && TServerInfo.getProjectId()!=""){
+        $(".aui-badge").css("display","none");
+        var params = {"ModuleGroup":"Project",
+          "UserId":TServerInfo.getUserId(),"ProjectId":"__globe__"};
+
+        AjaxApi.query("query_1011",params,function(data){
+          var datalist = data.list;
+          if(datalist){
+            for(var i=0;i<datalist.length;++i){
+               var item = datalist[i];
+               if(item[0] && item[3] && item[3]>0){
+                 var el = $("#badge_"+item[0]);
+                 el.css("display","block");
+                 el.html(item[3]);
+
+                 //moduleBadgeCnt[item[0]]=item[3];
+               }
+            }
+
+          }
+        });
+      }
+    }
+
+    //index的通知来调用的
+    function switchProjectTab(idx){
+       tabIndex = idx;
+        tab1loaded = false;
+       tab2loaded = false;
+       tab3loaded=false;
+       tab.setActive(tabIndex);
+       switchTab(tabIndex);
+    }
+
+    function removeTabRedPoint(idx){
+      // var itemName = "";
+      // if(idx == 2) itemName="ProjectUser";
+      // else if(idx == 3) itemName="Request";
+      //
+      // if(moduleBadgeCnt[itemName] && moduleBadgeCnt[itemName]>0){
+      //   var params = {"ModuleGroup":"Project","Module":itemName,
+      //     "UserId":TServerInfo.getUserId(),"ProjectId":"__globe__"};
+      //   AjaxApi.exec("query_9003",params,function(data){
+      //       $("#badge_"+itemName).css("display","none");
+      //       moduleBadgeCnt[itemName]=0;
+      //   });
+      // }
+      //TODO 每项
+    }
+
+
+
+    function selectProject(){
+      api.openWin({
+                    name: "app_selectproject",
+                    url: "selectproject.html",
+                    pageParam: {
+                        isFrame: false,
+                        srcWinName:"root",
+                        srcFrameName:"index.project"
+                    },
+                    bgColor: '#FFFFFF',
+                    slidBackEnabled: false,
+                    vScrollBarEnabled:false,
+                    hScrollBarEnabled:false,
+                    delay: 0
+                }
+        );
+    }
+
+    function setSelectProject(id,name,lon,lat){
+      setStorageProjectInfo(id,name,lon,lat);
+      setProjectInfo(id,name);
+    }
+
+    function setProjectInfo(id,name){
+      if(name=="") name="[选择项目]";
+      $("#worktitle").html(name);
+    }
+</script>
+</html>

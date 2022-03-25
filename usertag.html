@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+  <html>
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+      <title></title>
+      <link rel="stylesheet" type="text/css" href="css/app.css" />
+      <link rel="stylesheet" type="text/css" href="css/aui.css" />
+      <link rel="stylesheet" type="text/css" href="css/aui-pull-refresh.css" />
+      <style>
+          body{
+
+          }
+
+          .am-with-fixed--custheader {
+            padding-top: 2.25rem;
+          }
+      </style>
+  </head>
+  <body class="am-with-fixed--custheader aui-margin-l-0">
+    <div id="header" class="am-header-fixed" >
+    <header id="aui-header" class="aui-bar aui-bar-nav aui-bar-light">
+      <a class="aui-btn aui-pull-left" tapmode onclick="closeWin()">
+          <span class="aui-iconfont aui-icon-left"></span>
+      </a>
+    <div class="aui-title" >成员分组</div>
+
+    <a class="aui-btn aui-pull-right" tapmode onclick="addTagOk()">
+        <span class="aui-iconfont aui-icon-correct"></span>
+    </a>
+    </header>
+</div>
+
+<div id="tagListContent" class="aui-padded-b-5 aui-padded-l-5 aui-padded-r-5" style="background-color:#f5f5f5;" >
+
+
+
+</div>
+<div class="aui-text-center aui-font-size-12 aui-margin-10" style="color:#aaa">输入标签名称,点+添加一个新标签</div>
+
+<ul class="aui-list aui-form-list">
+       <li class="aui-list-item">
+           <div class="aui-list-item-inner">
+               <div class="aui-list-item-label">
+                   标签
+               </div>
+               <div class="aui-list-item-input">
+                   <input type="text" id="theTagName" placeholder="分组名称">
+               </div>
+               <div class="aui-list-item-label-icon" onclick="addTag()">
+                  <i class="aui-iconfont aui-icon-plus"></i>
+              </div>
+           </div>
+       </li>
+</ul>
+<p class="aui-margin-l-15 aui-margin-t-10 aui-margin-b-10">成员列表</p>
+<section class="aui-refresh-content " >
+    <ul id="userListContent" class="aui-list aui-media-list" style="background-color:#f5f5f5;">
+
+
+<br/>  <br/><br/><br/><br/><br/>
+      </ul>
+</section>
+
+      <script id="userListTpl" type="text/html">
+
+          {{each list}}
+
+          <li class="aui-list-item aui-list-item-middle" style="background-color:#ffffff;" >
+            <div class="aui-media-list-item-inner">
+              <div class="aui-list-item-media" style="width:auto">
+                  <img src='{{$value["PictureId"]}}'   style="height:40px;width:40px" class="aui-img-round"/>
+              </div>
+              <div class="aui-list-item-inner">
+                <div class="aui-list-item-title">{{$value["RealName"]}}({{$value["UserName"]}})  </div>
+              </div>
+            </div>
+          </li>
+
+          {{/each}}
+      </script>
+
+      <script id="tagListTpl" type="text/html">
+          {{each list}}
+            <div class="aui-btn aui-btn-primary  aui-btn-outlined " style="margin-top:5px !important;" name="tagCheck" uTagName="{{$value[0]}}" onclick="selectTag(this,'{{$value[0]}}')">{{$value[0]}}</div>
+          {{/each}}
+      </script>
+  </body>
+  <script type="text/javascript" src="script/api.js" ></script>
+  <script type="text/javascript" src="css/amazeui/js/jquery.min.js"></script>
+  <script type='text/javascript' src='script/common.js'></script>
+  <script type='text/javascript' src='script/queryapi.js'></script>
+  <script type='text/javascript' src='script/template.js'></script>
+  <script type="text/javascript" src="script/imageapi.js"></script>
+  <script type="text/javascript" src="script/aui-dialog.js" ></script>
+  <script type="text/javascript" src="script/aui-toast.js" ></script>
+  <script type="text/javascript">
+  function closeWin(){
+      api.closeWin({
+      });
+  }
+
+var toast = new auiToast();
+  var dialog = new auiDialog({});
+var tags = [];
+  var orginUsers = [];
+
+      apiready = function(){
+        var header = $api.byId('aui-header');
+        $api.fixStatusBar(header);
+
+        var height = $("#header").height();
+        $('body').css('padding-top', height);
+
+          orginUsers =api.pageParam.selectedUsers;
+
+          initTags();
+          loadUsers();
+      };
+
+      function initTags(){
+        AjaxApi.query("query_1008",{"ProjectId":TServerInfo.getProjectId()},function(data){
+          var datalist = data.list;
+          if(datalist){
+            var tplData = {
+              "list" : datalist
+            };
+            var html = template("tagListTpl", tplData);
+            $("#tagListContent").html(html);
+
+          }
+        });
+      }
+
+      function addTag(){
+        var tagName = $("#theTagName").val();
+        if(tagName == "")
+          return;
+
+        var tplData = {
+          "list" : [[tagName]]
+        };
+        var html = template("tagListTpl", tplData);
+        $("#tagListContent").append(html);
+        $("#theTagName").val("");
+      }
+
+      function preUsermageUrl(datalist)
+      {
+        var imageIdx = "PictureId";
+          for (var i = 0; i < datalist.length; i++) {
+            var item = datalist[i];
+            if(item[imageIdx] && item[imageIdx]!=""){
+              item[imageIdx] = ImageApi.getGlobleImageUrl(item["Id"],item[imageIdx]);
+            }else{
+              item[imageIdx]="image/user.jpg";
+            }
+          }
+      }
+
+      function loadUsers(){
+        var queryparam = {"Id": JSON.stringify(orginUsers)};
+        AjaxApi.rest("queryEntities","SysUser",queryparam,function(data){
+          if(data && data.length>0){
+            preUsermageUrl(data);
+            var tplData = {
+              "list" : data
+            };
+            var html = template("userListTpl", tplData);
+            $("#userListContent").html(html);
+          }
+        });
+      }
+
+      function addTagOk(){
+        if(tags.length==0){
+          api.toast({
+              msg : "没有标签可以添加!",
+              duration : 1000,
+              location : 'bottom'
+            });
+            return;
+        }
+
+        toast.loading({
+              title:"正在保存...",
+              duration:2000
+          },function(ret){
+
+          });
+
+        if(api.pageParam.isupdate && orginUsers.length>0){
+          var userIds = "'"+orginUsers.join("','")+"'";
+          AjaxApi.exec("query_9002",{"ProjectId":TServerInfo.getProjectId(),"UserIds":userIds},function(data){
+              createTagLinks();
+          });
+        }else{
+          createTagLinks();
+        }
+      }
+
+      function createTagLinks(){
+
+
+        var objs = [];
+        for(var i=0;i<orginUsers.length;++i){
+            var userId = orginUsers[i];
+            for(var j=0;j<tags.length;++j){
+                var tag = tags[j];
+                var obj={"Id":GetUuid(),"ProjectId":TServerInfo.getProjectId(),"UserId":userId,"Tag":tag};
+                objs.push(obj);
+            }
+        }
+
+        AjaxApi.rest("createEntities","ProjectUserTag",objs,function(ret){
+          api.toast({
+              msg : "提交成功!",
+              duration : 1000,
+              location : 'bottom'
+            });
+
+          setTimeout(function(){reloadParent();api.closeWin();},1000);
+        });
+      }
+
+      function selectTag(tagEl,tagstr){
+        var index = $.inArray(tagstr, tags);
+        if(index >= 0)
+        {
+          tags.splice(index,1);
+          $(tagEl).addClass("aui-btn-outlined");
+        }else{
+          tags.push(tagstr);
+          $(tagEl).removeClass("aui-btn-outlined");
+        }
+      }
+
+
+      function reloadParent(){
+        try{
+        api.execScript({
+          name: 'root',
+          frameName: 'index.contact',
+          script: 'switchContactTab(2)'
+         });
+        }catch(e){}
+      }
+  </script>
+  </html>

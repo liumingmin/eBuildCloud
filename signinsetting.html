@@ -1,0 +1,383 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>Hello APP</title>
+    <link rel="stylesheet" type="text/css" href="css/app.css" />
+    <link rel="stylesheet" type="text/css" href="css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="css/aui-pull-refresh.css" />
+    <link rel="stylesheet" type="text/css" href="css/font-awesome/css/font-awesome.min.css" />
+	<style>
+  .am-with-fixed--custheader {
+    padding-top: 8.45rem;
+  }
+	</style>
+</head>
+<body class="am-with-fixed--custheader">
+
+  <div id="header" class="am-header-fixed" >
+  <header id="aui-header" class="aui-bar aui-bar-nav aui-bar-light">
+    <a class="aui-btn aui-pull-left" tapmode onclick="closeWin()">
+        <span class="aui-iconfont aui-icon-left"></span>
+    </a>
+  <div class="aui-title" id="title">考勤设置</div>
+
+  <a class="aui-btn aui-pull-right" tapmode onclick="commit()">
+      <span class="aui-iconfont aui-icon-correct"></span>
+  </a>
+  </header>
+
+
+  <ul class="aui-list aui-form-list">
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                开始时间
+            </div>
+            <div class="aui-list-item-input">
+                  <input id="SignInStartTime" placeholder="" type="text" readonly>
+            </div>
+            <div class="aui-pull-right  " style="width:40px !important">
+                <a onclick="timepick('SignInStartTime')"  style="width:100%"> &gt;&gt;&nbsp;</a>
+            </div>
+
+        </div>
+    </li>
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                结束时间
+            </div>
+            <div class="aui-list-item-input">
+                  <input id="SignInEndTime" placeholder="" type="text" readonly>
+            </div>
+            <div class="aui-pull-right  " style="width:40px !important">
+                <a onclick="timepick('SignInEndTime')"  style="width:100%"> &gt;&gt;&nbsp;</a>
+            </div>
+
+        </div>
+    </li>
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                日期范围
+            </div>
+            <div class="aui-list-item-input" style="padding-top:5px">
+                  <div id="day_1" class="aui-btn aui-btn-primary  aui-btn-outlined" style="padding:0 5px;margin-bottom:5px"  onclick="selectDay(this,'1')">周一</div>
+                  <div id="day_2" class="aui-btn aui-btn-primary  aui-btn-outlined" style="padding:0 5px;margin-bottom:5px"  onclick="selectDay(this,'2')">周二</div>
+                  <div id="day_3" class="aui-btn aui-btn-primary  aui-btn-outlined" style="padding:0 5px;margin-bottom:5px"  onclick="selectDay(this,'3')">周三</div>
+                  <div id="day_4" class="aui-btn aui-btn-primary  aui-btn-outlined" style="padding:0 5px;margin-bottom:5px"  onclick="selectDay(this,'4')">周四</div>
+                  <div id="day_5" class="aui-btn aui-btn-primary  aui-btn-outlined" style="padding:0 5px;margin-bottom:5px"  onclick="selectDay(this,'5')">周五</div>
+                  <div id="day_6" class="aui-btn aui-btn-primary  aui-btn-outlined" style="padding:0 5px;margin-bottom:5px"  onclick="selectDay(this,'6')">周六</div>
+                  <div id="day_0" class="aui-btn aui-btn-primary  aui-btn-outlined" style="padding:0 5px;margin-bottom:5px"  onclick="selectDay(this,'0')">周日</div>
+            </div>
+
+        </div>
+    </li>
+  </ul>
+
+</div>
+
+
+<section >
+<ul class="aui-list aui-media-list" id="signInLocationContent">
+
+</ul>
+</section>
+<br/>
+<div class="aui-text-center  aui-margin-15" >
+<div class="aui-btn aui-btn-block aui-btn-primary" onclick="addSignInLocation()">新增考勤点</div>
+</div>
+
+    <script id="signInLocationTpl" type="text/html">
+        {{each list}}
+        <li class="aui-list-item " id="li_{{$value[0]}}" >
+            <div class="aui-media-list-item-inner">
+                <div class="aui-list-item-media" style="width:3em">地址</div>
+                <div class="aui-list-item-input" onclick="selectLocation('{{$value[0]}}_Location')">
+                      <textarea style="height:2.5em"  id="{{$value[0]}}_Location" location='[{{$value[3]}},{{$value[4]}},"{{$value[6]}}"]' placeholder="点击设置考勤点"  readonly >{{$value[6]}}</textarea>
+                </div>
+            </div>
+
+            <div class="aui-info" style="padding-top:0px;padding-bottom:0px;">
+
+                <div class="aui-info-item" >
+                      <span style="width:4em">范围</span><input id="{{$value[0]}}_Range" placeholder="范围" type="number"  value="{{$value[5]}}" />
+                </div>
+                <div class="aui-info-item" >
+                    <a onclick="removeNode('{{$value[0]}}')"  style="width:100%"> <i class="fa fa-close"></i> </a>
+                </div>
+            </div>
+        </li>
+        {{/each}}
+    </script>
+
+</body>
+<script type="text/javascript" src="script/api.js" ></script>
+<script type="text/javascript" src="css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='script/common.js'></script>
+<script type='text/javascript' src='script/queryapi.js'></script>
+<script type='text/javascript' src='script/template.js'></script>
+<script type="text/javascript" src="script/imageapi.js"></script>
+<script type="text/javascript" src="script/aui-dialog.js" ></script>
+<script type="text/javascript" src="script/aui-toast.js" ></script>
+<script type="text/javascript">
+function closeWin(){
+    api.closeWin({
+    });
+}
+
+var daystrs = [];
+var toast = new auiToast();
+var datalist=[];
+var deleteIds=[];
+    apiready = function(){
+      var header = $api.byId('aui-header');
+      $api.fixStatusBar(header);
+
+      var height = $("#header").height();
+      $('body').css('padding-top', height);
+
+        initProjectInfo(api.pageParam.projectId);
+        loadSignInLocation(api.pageParam.projectId);
+    };
+
+    function timepick(nodeid){
+      api.openPicker({
+          type: 'time',
+          date: new Date().Format("yyyy-MM-dd HH:mi"),
+          title: '选择时间'
+      }, function(ret, err) {
+          if (ret) {
+            var hour = ret.hour+"";
+            var minute = ret.minute+"";
+              $("#"+nodeid).val(hour.PadLeft(2,0)+":"+minute.PadLeft(2,0));
+          }
+      });
+    }
+
+    function initProjectInfo(projectId){
+      if(projectId){
+        AjaxApi.rest("retrievEntity","Project",projectId,function(data){
+            var projectObj = data;
+            $("#SignInStartTime").val(projectObj.SignInStartTime);
+            $("#SignInEndTime").val(projectObj.SignInEndTime);
+            initDay(projectObj.SignInDays);
+        });
+      }
+    }
+
+    function initDay(daystrstr){
+        if(!daystrstr)
+           return ;
+
+        if(daystrstr == "")
+            return ;
+
+        daystrs = daystrstr.split(",");
+
+        for(var i=0;i<daystrs.length;++i){
+          var day = daystrs[i];
+          $("#day_"+day).removeClass("aui-btn-outlined");
+        }
+    }
+
+    function selectDay(elment,daystr){
+        var index = $.inArray(daystr, daystrs);
+        if(index >= 0)
+        {
+          daystrs.splice(index,1);
+          $(elment).addClass("aui-btn-outlined");
+        }else{
+          daystrs.push(daystr);
+          $(elment).removeClass("aui-btn-outlined");
+        }
+    }
+
+    function preNumProc(datalist){
+      for(var j=0;j<datalist.length;++j){
+          var item = datalist[j];
+          if(item.length >=6){
+             item[1] = parseInt(item[1]);
+             item[3] = parseFloat(item[3]);
+             item[4] = parseFloat(item[4]);
+             item[5] = parseFloat(item[5]);
+          }
+      }
+    }
+
+    function loadSignInLocation(projectId){
+      AjaxApi.query("query_1161",{"ProjectId":projectId},function(data){
+
+        if(data.list){
+          datalist = data.list;
+          preNumProc(datalist);
+          var tplData = {
+            "list" : datalist
+          };
+          var html = template("signInLocationTpl", tplData);
+          $("#signInLocationContent").html(html);
+
+        }
+      });
+    }
+
+    function addSignInLocation(){
+      var emptyItem = [GetUuid(),datalist.length+1,0,0,0,500,""];
+      var tplData = {
+        "list" : [emptyItem]
+      };
+      var html = template("signInLocationTpl", tplData);
+      $("#signInLocationContent").append(html);
+
+      datalist.push(emptyItem);
+    }
+
+    function removeNode(id){
+      $("#li_"+id).remove();
+      for(var i=datalist.length-1;i>=0;--i){
+        var item = datalist[i];
+        if(item[0] == id){
+            datalist.splice(i,1);
+            deleteIds.push(id);
+
+            if(i<datalist.length){
+              for(var j=i;j<datalist.length;++j){
+                  var nextitem = datalist[j];
+                  nextitem[1]=j+1;
+              }
+            }
+            break;
+        }
+      }
+    }
+
+    function tryToFloat(str){
+        if(!str || str=="")
+        return 0;
+
+        return parseFloat(str);
+    }
+
+
+
+    function commit(){
+        if($("#SignInStartTime").val() == ""){
+          api.toast({
+            msg : "开始时间必须设置",
+            duration : 2000,
+            location : 'bottom'
+          });
+          return;
+        }
+
+        if($("#SignInEndTime").val() == ""){
+          api.toast({
+            msg : "结束时间必须设置",
+            duration : 2000,
+            location : 'bottom'
+          });
+          return;
+        }
+
+        var sigininlocs = [];
+        for(var j=0;j<datalist.length;++j){
+            var item = datalist[j];
+            var id=item[0];
+            var orderNo = item[1];
+            var range = tryToFloat($("#"+id+"_Range").val());
+            var location = $("#"+id+"_Location").attr("location");
+            var lon=item[3];
+            var lat =item[4];
+            var address=item[6];
+            if(location&& location!=""){
+              var locobj = JSON.parse(location);
+              lon = locobj[0];
+              lat = locobj[1];
+              address = locobj[2];
+            }else{
+              api.toast({
+                msg : '第'+orderNo+"行地址未选择",
+                duration : 2000,
+                location : 'bottom'
+              });
+              return;
+            }
+
+            var sigininloc = {"Id":id,"OrderNo":orderNo,"ProjectId":api.pageParam.projectId,
+            "Lon":lon,"Lat":lat,"Range":range,"Address":address};
+            sigininlocs.push(sigininloc);
+        }
+
+        toast.loading({
+              title:"正在保存...",
+              duration:2000
+          },function(ret){
+
+          });
+
+          var entObj = {"Id":api.pageParam.projectId,
+                "SignInStartTime":$("#SignInStartTime").val(),
+                "SignInEndTime":$("#SignInEndTime").val(),
+                "SignInDays":daystrs.join(",")
+              };
+
+        AjaxApi.rest("updateEntity","Project",entObj,function(data){
+          AjaxApi.rest("saveEntities","ProjectSignInLocation",sigininlocs,function(data){
+            AjaxApi.rest("deleteEntities","ProjectSignInLocation",deleteIds,function(data){
+              api.toast({
+                msg : '考勤设置更新成功',
+                duration : 2000,
+                location : 'bottom'
+              });
+
+              setTimeout(function(){api.closeWin();},1000);
+            },{"noTips":true});
+          },{"noTips":true});
+        },{"DataUpdateColumn":"SignInStartTime,SignInEndTime,SignInDays","noTips":true});
+    }
+
+
+    var currSelectLocationId;
+    function selectLocation(nodeid){
+       currSelectLocationId = nodeid;
+       var location = $("#"+nodeid).attr("location");
+       var lon=0;
+       var lat =0;
+       var address="";
+       if(location&& location!=""){
+         var locobj = JSON.parse(location);
+         lon = locobj[0];
+         lat = locobj[1];
+         address = locobj[2];
+       }
+
+       api.openWin({
+                    name: "app_selectlocation",
+                    url: "selectLocation.html",
+                    pageParam: {
+                        isFrame: false,
+                        srcWinName:"app_signinsetting",
+                        srcFrameName:"",
+                        Lon: lon,
+                        Lat:lat,
+                        Address:address
+                    },
+                    bgColor: '#FFFFFF',
+                    slidBackEnabled: false,
+                    vScrollBarEnabled:false,
+                    hScrollBarEnabled:false,
+                    delay: 0
+                }
+        );
+    }
+
+    function setSelectLocation(lon,lat,address){
+        $("#"+currSelectLocationId).attr("location",JSON.stringify([lon,lat,address]));
+
+        $("#"+currSelectLocationId).val(address);
+    }
+</script>
+</html>

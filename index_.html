@@ -1,0 +1,201 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,initial-scale=1.0,width=device-width" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <style type="text/css">
+
+    </style>
+
+    <link rel="stylesheet" href="css/sui/sm.min.css">
+<link rel="stylesheet" href="css/sui/font.css">
+</head>
+
+<body class="wrap">
+  <header class="bar bar-nav">
+<h1 class="title">项目名</h1>
+</header>
+
+<nav class="bar bar-tab">
+  <a class="tab-item external active" href="#">
+    <span class="icon icon-home"></span>
+    <span class="tab-label">文案</span>
+  </a>
+  <a class="tab-item external" href="#">
+    <span class="icon icon-me"></span>
+    <span class="tab-label">文案</span>
+    <span class="badge">2</span>
+  </a>
+  <a class="tab-item external" href="#">
+    <span class="icon icon-star"></span>
+    <span class="tab-label">文案</span>
+  </a>
+  <a class="tab-item external" href="#">
+    <span class="icon icon-cart"></span>
+    <span class="tab-label">文案</span>
+  </a>
+  <a class="tab-item external" href="#">
+    <span class="icon icon-settings"></span>
+    <span class="tab-label">文案</span>
+  </a>
+</nav>
+</body>
+<script type="text/javascript" src="script/api.js"></script>
+<script type='text/javascript' src='css/sui/zepto.min.js' charset='utf-8'></script>
+<script type='text/javascript' src='css/sui/sm.min.js' charset='utf-8'></script>
+<script type="text/javascript">
+
+function test()
+{
+}
+
+    apiready = function() {
+        //输出Log，Log将显示在APICloud Studio控制台
+        console.log("Hello World! Hello APICloud!");
+
+        var header = $api.dom('header'); // 获取 header 标签元素
+        var footer = $api.dom('footer'); // 获取 footer 标签元素
+
+        // 1.修复开启沉浸式效果带来的顶部Header与手机状态栏重合的问题，最新api.js方法已支持适配iPhoneX；
+        // 2.默认已开启了沉浸式效果 config.xml中 <preference name="statusBarAppearance" value="true"/>
+        // 3.沉浸式效果适配支持iOS7+，Android4.4+以上版本
+        var headerH = $api.fixStatusBar(header);
+        // 最新api.js为了适配iPhoneX增加的方法，修复底部Footer部分与iPhoneX的底部虚拟横条键重叠的问题；
+        var footerH = $api.fixTabBar(footer);
+
+        // api.openFrame({
+        //     name: 'main',
+        //     url: 'html/notice-con.html',
+        //     bounces: true,
+        //     rect: { // 推荐使用Margin布局，用于适配屏幕的动态变化
+        //         marginTop: headerH, // main页面距离win顶部的高度
+        //         marginBottom: footerH, // main页面距离win底部的高度
+        //         w: 'auto' // main页面的宽度 自适应屏幕宽度
+        //     }
+        // });
+
+        // api.openWin({
+        //               name: "login",
+        //               url: "http://10.1.31.204:8000/admin/project/list",
+        //               pageParam: {
+        //                   isFrame: false
+        //               },
+        //               bgColor: '#FFFFFF',
+        //               slidBackEnabled: false,
+        //               vScrollBarEnabled:false,
+        //               hScrollBarEnabled:false,
+        //               delay: 0
+        //           }
+        //   );
+
+
+
+        // api.ajax({
+    		//   url:'http://10.1.31.204:8000/queryapi/queryLayuiByCond?queryId=query_0001&page=1&limit=10',
+    		//   method:'get',
+    		//   cache: false,
+    		//   timeout: 30,
+    		//   dataType: 'json'
+    		// },function(ret,err){
+        //   alert(JSON.stringify(ret));
+        // });
+
+        api.openWin({
+                      name: "login",
+                      url: "http://192.168.1.102:8000/logout",
+                      pageParam: {
+                          isFrame: false
+                      },
+                      bgColor: '#FFFFFF',
+                      slidBackEnabled: false,
+                      vScrollBarEnabled:false,
+                      hScrollBarEnabled:false,
+                      delay: 0
+                  }
+          );
+
+        // api.openWin({
+        //               name: "login",
+        //               url: "http://192.168.1.102:8000/login?clientType=mobile",
+        //               pageParam: {
+        //                   isFrame: false
+        //               },
+        //               bgColor: '#FFFFFF',
+        //               slidBackEnabled: false,
+        //               vScrollBarEnabled:false,
+        //               hScrollBarEnabled:false,
+        //               delay: 0
+        //           }
+        //   );
+
+        // 获取当前年份时间，并加载显示到页面
+        var year = $api.byId('year');
+        year.innerHTML = new Date().getFullYear();
+    };
+
+
+
+
+    //     function commit(){
+    //       var dialogBox = api.require('dialogBox');
+    //       dialogBox.input({
+    //           keyboardType: 'default',
+    //           tapClose:true,
+    //           texts: {
+    //               title: '意见',
+    //               placeholder: '',
+    //               leftBtnTitle: '退回',
+    //               rightBtnTitle: '同意'
+    //           },
+    //           styles: {
+    //               bg: '#fff',
+    //               corner: 2,
+    //               w: 300,
+    //               h: 240,
+    //               title: {
+    //                   h: 60,
+    //                   alignment: 'center',
+    //                   size: 14,
+    //                   color: '#000',
+    //                   marginT:30,
+    //               },
+    //               input: {
+    //                   h: 60,
+    //                   y:30,
+    //                   marginT:15,
+    //                   marginLeft: 10,
+    //                   marginRight:10,
+    //                   textSize: 14,
+    //                   textColor: '#000'
+    //               },
+    //               dividingLine: {
+    //                   width: 0.5,
+    //                   color: '#696969'
+    //               },
+    //               left: {
+    //                   bg: 'rgba(0,0,0,0)',
+    //                   color: '#007FFF',
+    //                   size: 12
+    //         },
+    //         right: {
+    //             bg: 'rgba(0,0,0,0)',
+    //             color: '#007FFF',
+    //             size: 12
+    //         }
+    //     }
+    // }, function(ret) {
+    //
+    //
+    //
+    //     var dialogBox = api.require('dialogBox');
+    //     dialogBox.close({
+    //         dialogName: 'input'
+    //     });
+    // });
+    //     }
+</script>
+
+</html>

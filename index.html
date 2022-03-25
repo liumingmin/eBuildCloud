@@ -1,0 +1,411 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="css/font-awesome/css/font-awesome.min.css" />
+</head>
+<body>
+
+
+    <footer class="aui-bar aui-bar-tab aui-border-t" id="footer">
+        <div class="aui-bar-tab-item aui-active" tapmode id='work' onclick="openFrame(this)">
+            <div dotElem="dot" name="dot_App" class="aui-dot" style="display:none"></div>
+            <i class="aui-iconfont aui-icon-home"></i>
+            <div class="aui-bar-tab-label">工作台</div>
+        </div>
+        <div class="aui-bar-tab-item" tapmode id='app' onclick="openFrame(this)">
+            <div dotElem="dot"  class="aui-dot" style="display:none"></div>
+            <i class="fa fa-object-group "></i>
+            <div class="aui-bar-tab-label">应用</div>
+        </div>
+        <div class="aui-bar-tab-item" tapmode id='project' onclick="openFrame(this)">
+            <div dotElem="dot" name="dot_Project" class="aui-dot" style="display:none"></div>
+            <i class="fa fa-institution"></i>
+            <div class="aui-bar-tab-label">项目</div>
+        </div>
+        <div class="aui-bar-tab-item" tapmode id='contact' onclick="openFrame(this)">
+            <div dotElem="dot" name="dot_Contact" class="aui-dot" style="display:none"></div>
+            <i class="fa fa-address-card-o"></i>
+            <div class="aui-bar-tab-label">通讯录</div>
+        </div>
+        <div class="aui-bar-tab-item" tapmode id='my' onclick="openFrame(this)">
+            <div dotElem="dot" name="dot_My" class="aui-dot" style="display:none"></div>
+            <i class="aui-iconfont aui-icon-my"></i>
+            <div class="aui-bar-tab-label">我的</div>
+        </div>
+    </footer>
+</body>
+<script type="text/javascript" src="script/api.js"></script>
+<script type="text/javascript" src="css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='script/common.js'></script>
+<script type='text/javascript' src='script/queryapi.js'></script>
+<script type="text/javascript">
+  var isLoaded= false;
+//var moduleLinkMap = {"work":"App","app":"App","project":"Project","contact":"Contact"};
+var isLoadRedPoint = true;
+    apiready = function(){
+        RegDoubleBackQuit();
+         api.parseTapmode();
+        // var header = $api.byId('FF');
+        // $api.fixStatusBar(header);
+
+        AjaxApi.ping();
+
+        api.addEventListener({
+		    name:'viewappear'
+      },function(ret,err){
+          if(!isLoadRedPoint)
+          return ;
+          isLoadRedPoint = false;
+          setTimeout(function(){isLoadRedPoint = true;}, 3000 );
+
+          $("[dotElem='dot']").css("display","none");
+          refreshGlobeRedPoint();
+          refreshProjectRedPoint();
+          refreshWorkRedPoint();
+    		});
+
+        ToLogin();
+
+        // openFrame($("#work")[0]);
+        //initProjectInfo();
+    };
+
+    function initProjectInfo(){
+      if(TServerInfo.HasProjUserParam()){
+        AjaxApi.rest("retrievEntity","Project",TServerInfo.getProjectId(),function(projectObj){
+            $api.setStorage("projectName",projectObj.Name);
+            $api.setStorage('lon',projectObj.Lon);
+            $api.setStorage('lat',projectObj.Lat);
+             openFrame($("#work")[0]);
+          });
+        }
+    }
+
+    var moduleIsLoadedMap={};
+
+    function openFrame(el){
+      var moduleName = $(el).attr('id');
+
+      openFrameInit(moduleName);
+    }
+
+    function openFrameInit(moduleName,modulenotifytname){
+      $("#footer").children().each(function(){
+        $(this).removeClass("aui-active");
+      });
+      $("#"+moduleName).addClass("aui-active");
+
+      // var moduletname = moduleLinkMap[moduleName];
+      // if(moduletname){
+      //   $("#dot_"+moduletname).css("display","none");
+      // }
+
+      openFramePage(moduleName);
+
+      var scripttxt;
+      if(modulenotifytname){
+         scripttxt = modelFrameTabMap[modulenotifytname];
+      }
+
+      if(!moduleIsLoadedMap[moduleName]){
+        setTimeout(function(){initModuleGroupPage(moduleName,scripttxt);},1000);
+        moduleIsLoadedMap[moduleName]=true;
+      }else{
+        setTimeout(function(){initModuleGroupPage(moduleName,scripttxt);},200);
+      }
+    }
+
+    function openFramePage(moduleName){
+      var headerPos={h:0};
+      var body_h = $api.offset($api.dom('body')).h;
+      var footer_h = $api.offset($api.dom('footer')).h;
+      api.openFrame({
+          name: 'index.'+moduleName,
+          url: moduleName+'.html',
+          bounces: false,
+          rect: {
+              x: 0,
+              y: headerPos.h,
+              w: 'auto',
+              h: api.winHeight-headerPos.h-footer_h
+          }
+      });
+    }
+
+    function initModuleGroupPage(moduleName,scripttxt){
+      try{
+    	api.execScript({
+    		name: 'root',
+    		frameName: 'index.'+moduleName,
+    		script: 'swithModuleGroup()'
+    	 });
+    	}catch(e){}
+
+      if(scripttxt){
+        try{
+      	api.execScript({
+      		name: 'root',
+      		frameName: 'index.'+moduleName,
+      		script: scripttxt
+      	 });
+      	}catch(e){}
+      }
+    }
+
+    function LoginTo(){
+      api.openWin({
+                    name: "login",
+                    url: "http://"+TServerInfo.getHostUrl()+"/login?clientType=mobile",
+                    pageParam: {
+                        isFrame: false
+                    },
+                    bgColor: '#FFFFFF',
+                    slidBackEnabled: false,
+                    vScrollBarEnabled:false,
+                    hScrollBarEnabled:false,
+                    delay: 0
+                });
+    }
+
+    function ToLogin(){
+      AjaxApi.keepalive(function(ret,err){
+        if(ret)
+        {
+          if(ret.Code == 0){
+              initJPush();
+              initRongCloud();
+              return ;
+          }
+
+          if(ret.Code==1){
+              LoginTo();
+          }else{
+            api.toast({
+                msg : ret.Msg,
+                duration : 1000,
+                location : 'bottom'
+              });
+
+              setTimeout(LoginTo(),1000);
+          }
+        }
+        else
+        {
+          api.toast({
+  			      msg : ('错误码：'+err.code+';错误信息：'
+  					+err.msg+';网络状态码：'+err.statusCode),
+  					duration : 1000,
+  					location : 'bottom'
+  			    });
+
+          setTimeout(LoginTo(),1000);
+        }
+    });
+    }
+
+    function refreshWorkRedPoint(){
+      try{
+      api.execScript({
+        name: 'root',
+        frameName: 'index.work',
+        script: 'loadWorkRedItems(false)'
+       });
+      }catch(e){}
+    }
+
+    function refreshGlobeRedPoint(){
+      if(TServerInfo.HasUserParam() ){
+        AjaxApi.query("query_1010",{"UserId":TServerInfo.getUserId(),"ProjectId":"__globe__"},function(data){
+            if(data && data.list)
+            {
+              for(var i=0;i<data.list.length;++i){
+                 var item = data.list[i];
+                 if(item[1]>0){
+                   $("[name='dot_{0}']".format(item[0])).css("display","block");
+                 }else{
+                   $("[name='dot_{0}']".format(item[0])).css("display","none");
+                 }
+              }
+            }
+        });
+      }
+    }
+
+    function refreshProjectRedPoint(){
+      if(TServerInfo.HasProjUserParam()){
+        AjaxApi.query("query_1010",TServerInfo.getProjUserParam(),function(data){
+            if(data && data.list)
+            {
+              for(var i=0;i<data.list.length;++i){
+                 var item = data.list[i];
+                 if(item[1]>0){
+                   $("[name='dot_{0}']".format(item[0])).css("display","block");
+                 }else{
+                   $("[name='dot_{0}']".format(item[0])).css("display","none");
+                 }
+              }
+            }
+        });
+      }
+    }
+
+    function selectProject(){
+      api.openWin({
+                    name: "app_selectproject",
+                    url: "selectproject.html",
+                    pageParam: {
+                        isFrame: false,
+                        srcWinName:"root",
+                        srcFrameName:"index.work"
+                    },
+                    bgColor: '#FFFFFF',
+                    slidBackEnabled: false,
+                    vScrollBarEnabled:false,
+                    hScrollBarEnabled:false,
+                    delay: 0
+                }
+        );
+    }
+
+    function closeWin(){
+        api.closeWin({
+        });
+    }
+
+    var modelWinMap = {"OaNotice":"noticelist","OaTask":"tasklist","OaAttendance":"attendance",
+                  "OaWorkReport":"workreportlist","OaAppLeave":"leavelist"};
+    var modelFrameMap = {"ProjectUser":"project","Request":"project"};
+    var modelFrameTabMap = {"ProjectUser":"switchProjectTab(2)","Request":"switchProjectTab(3)","Contact":"switchContactTab(2)"};
+//login mobile ok invoke
+    function initJPush(){
+    	try{
+    		var ajpush = api.require('ajpush');
+
+			  ajpush.init(function(ret) {
+			    if (ret && ret.status){
+            setJPushUser(TServerInfo.getUserId());
+			    	ajpush.setListener(
+					    function(ret) {
+					         var id = ret.id;
+					         var title = ret.title;
+					         var content = ret.content;
+					         var extra = ret.extra;
+
+
+					    }
+					);
+			    }
+			});
+
+
+	    	api.addEventListener({name:'appintent'}, function(ret,err) {
+			    if(ret && ret.appParam.ajpush){
+			        var ajpush1 = ret.appParam.ajpush;
+			        var id = ajpush1.id;
+			        var title = ajpush1.title;
+			        var content = ajpush1.content;
+			        var extra = ajpush1.extra;
+
+              var modeltName = extra["Module"];
+
+              if(modelFrameMap[modeltName]){
+                  refreshGlobeRedPoint();
+                  openFrameInit(modelFrameMap[modeltName],modeltName);
+              }else if(modelWinMap[modeltName]){
+                refreshProjectRedPoint();
+                openRealWin(modelWinMap[modeltName]);
+              }
+
+			    }
+			})
+
+	    	api.addEventListener({name:'resume'}, function(ret,err) {
+			    ajpush.onResume();
+			});
+
+			api.addEventListener({name:'pause'}, function(ret,err) {
+			    ajpush.onPause();
+			});
+		  }catch(e){}
+
+      try{
+        initProjectInfo();
+
+        $("[dotElem='dot']").css("display","none");
+        refreshGlobeRedPoint();
+        refreshProjectRedPoint();
+        refreshWorkRedPoint();
+      }catch(e){}
+    }
+
+    var reconnCnt = 0;
+    function initRongCloud(){
+      var rong = api.require('rongCloud2');
+      rong.init(function(ret, err) {
+          if (ret.status == 'error'){
+            api.toast({ msg: err.code });
+            return ;
+          }
+
+          if(TServerInfo.getRongCloudToken()==""){
+            AjaxApi.getRcToken(function(token){
+                $api.setStorage('rongCloudToken',token);
+                connectRc(rong);
+            });
+          }else{
+            connectRc(rong);
+          }
+      });
+
+    }
+
+    function connectRc(rong){
+      rong.connect({token: TServerInfo.getRongCloudToken()},function(ret, err) {
+          if (ret.status == 'success') {
+              
+          }else{
+             if(err.code == 31004 && reconnCnt<5){
+                  AjaxApi.getRcToken(function(token){
+                      $api.setStorage('rongCloudToken',token);
+                      ++reconnCnt;
+                      connectRc(rong);
+                  });
+             }
+          }
+      });
+    }
+
+    function openRealWin(moduleName){
+      api.openWin({
+                    name: "app_"+moduleName,
+                    url: "html/"+moduleName+"_win.html",
+                    pageParam: {
+                        isFrame: false
+                    },
+                    bgColor: '#FFFFFF',
+                    slidBackEnabled: false,
+                    vScrollBarEnabled:false,
+                    hScrollBarEnabled:false,
+                    delay: 0
+                }
+        );
+    }
+
+    function setJPushUser(userName){
+  		try{
+  			var ajpush = api.require('ajpush');
+
+  			var param = {alias:userName,tags:[userName]};
+  			ajpush.bindAliasAndTags(param,function(ret) {
+  		        var statusCode = ret.statusCode;
+
+  			});
+  		}catch(e){}
+  	}
+
+</script>
+</html>

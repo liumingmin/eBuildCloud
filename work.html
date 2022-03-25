@@ -1,0 +1,326 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="css/app.css" />
+    <link rel="stylesheet" type="text/css" href="css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="css/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/aui-pull-refresh.css" />
+    <style type="text/css">
+        .aui-list-item.wechat-top {
+            background-color: #f3f3f7;
+        }
+        .aui-list .wechat-avatar {
+            width:3rem;
+        }
+        .wechat-avatar .aui-row-padded {
+            background-color: #dddee0;
+            padding: 0.1rem;
+            border-radius: 0.2rem;
+            margin-left: -0.05rem;
+            margin-right: -0.05rem;
+        }
+        .wechat-avatar .aui-row-padded [class*=aui-col-xs-] {
+            padding: 0.05rem;
+        }
+        .wechat-avatar,
+        .wechat-avatar > img {
+            border-radius:0.2rem;
+        }
+
+        .am-with-fixed-tab {
+          padding-top: 2.25rem;
+        }
+    </style>
+</head>
+<body class="am-with-fixed-tab">
+  <div id="header" class="am-header-fixed">
+  <header id="aui-header" class="aui-bar aui-bar-nav aui-bar-light">
+  <a class="aui-pull-left aui-btn">
+      <span class="aui-text-primary"></span>
+  </a>
+  <div  class="aui-title" ><span id="worktitle" onclick="selectProject()">[选择项目]</span>&nbsp;<i onclick="selectProject()" class="fa aui-text-success  fa-refresh"></i></div>
+  <a class="aui-pull-right aui-btn ">
+
+  </a>
+</header>
+</div>
+
+<section class="aui-refresh-content ">
+        <ul id="workItemListContent" class="aui-list aui-media-list" style="background-color:#f5f5f5">
+  <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+            <!-- <li class="aui-list-item aui-list-item-middle">
+                <div class="aui-media-list-item-inner">
+                    <div class="aui-list-item-media wechat-avatar">
+                        <i class="fa fa-2x fa-paper-plane-o aui-text-success"></i>
+                    </div>
+                    <div class="aui-list-item-inner">
+                        <div class="aui-list-item-text">
+                            <div class="aui-list-item-title">工作汇报</div>
+                            <div class="aui-list-item-right">1天前</div>
+                        </div>
+                        <div class="aui-list-item-text aui-font-size-12">
+                          提示：公司任务任务孙经理
+                        </div>
+                    </div>
+                </div>
+            </li>
+            <li class="aui-list-item aui-list-item-middle">
+                <div class="aui-media-list-item-inner">
+                    <div class="aui-list-item-media wechat-avatar">
+                        <div class="aui-dot"></div>
+                          <i class="fa fa-2x fa-check-square-o aui-text-info"></i>
+                    </div>
+                    <div class="aui-list-item-inner">
+                        <div class="aui-list-item-text">
+                            <div class="aui-list-item-title">工作审批</div>
+                            <div class="aui-list-item-right">星期一</div>
+                        </div>
+                        <div class="aui-list-item-text aui-font-size-12">
+                            提示：工作审批请假李工
+                        </div>
+                    </div>
+                </div>
+            </li> -->
+        </ul>
+    </div>
+
+</section>
+
+<script id="workitemListTpl" type="text/html">
+  {{each list}}
+  <li class="aui-list-item aui-list-item-middle" style="background-color:#ffffff;" onclick="viewWorkItem('{{$value[0]}}')">
+      <div class="aui-media-list-item-inner">
+          <div class="aui-list-item-media wechat-avatar">
+              {{if $value[3] > 0}}<div id="badge_{{$value[0]}}" class="aui-badge">  {{$value[3]}}</div> {{/if}}
+              {{$value[2]}}
+          </div>
+          <div class="aui-list-item-inner">
+              <div class="aui-list-item-text">
+                  <div class="aui-list-item-title">{{$value[1]}}</div>
+                  <div class="aui-list-item-right">{{$value[5]}}</div>
+              </div>
+              <div class="aui-list-item-text aui-font-size-12">
+                  提示：{{$value[4]}}
+              </div>
+          </div>
+      </div>
+  </li>
+  {{/each}}
+</script>
+
+</body>
+<script type="text/javascript" src="script/api.js" ></script>
+<script type="text/javascript" src="css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='script/common.js'></script>
+<script type='text/javascript' src='script/queryapi.js'></script>
+<script type='text/javascript' src='script/template.js'></script>
+<script type="text/javascript" src="script/hammer.min.js"></script>
+<script type="text/javascript" src="script/imageapi.js"></script>
+<script type="text/javascript" src="script/aui-pull-refresh.js"></script>
+<script type="text/javascript" src="script/aui-popup.js" ></script>
+<script type="text/javascript">
+//var moduleBadgeCnt = {};
+var moduleCnMap = {"OaNotice":"公告","OaTask":"任务","OaWorkReport":"汇报","OaAppLeave":"请假",
+                  "OaAppTravel":"出差","OaAppOut":"外出","OaAppExpense":"报销","OaAppPurchase":"采购","OaAppApproves":"审批",
+                  "SiteWorkLog":"日志","SiteDynamic":"动态","SiteTellTech":"交底","SiteSafe":"安全","SiteQty":"质量"};
+
+var moduleBind = {"OaNotice":'<i class="fa fa-bullhorn  aui-text-info fa-2x"></i>',
+                  "OaTask":'<i class="fa fa-tasks aui-text-warning fa-2x"></i> ',
+                  "OaWorkReport":'<i class="fa fa-paper-plane-o aui-text-success fa-2x"></i> ',
+                "OaAppLeave":'<img src="image/icon/leave.png" style="padding:0px;margin:0px;padding-right:10px" />',
+              "OaAppTravel":'<img src="image/icon/travel.png" style="padding:0px;margin:0px;padding-right:10px" />',
+            "OaAppOut":'<img src="image/icon/out.png" style="padding:0px;margin:0px;padding-right:10px" />',
+          "OaAppExpense":'<img src="image/icon/expense.png" style="padding:0px;margin:0px;padding-right:10px" />',
+        "OaAppPurchase":'<img src="image/icon/purchase.png" style="padding:0px;margin:0px;padding-right:10px" />',
+      "OaAppApproves":'<img src="image/icon/approves.png" style="padding:0px;margin:0px;padding-right:10px" />',
+      "SiteWorkLog":'<i class="fa fa-newspaper-o aui-text-danger fa-2x"></i>',
+    "SiteDynamic":'<i class="fa fa-leaf  aui-text-warning fa-2x"></i>',
+  "SiteTellTech":'<i class="fa fa-handshake-o  aui-text-primary fa-2x"></i>',
+"SiteSafe":'<i class="fa fa-strikethrough  aui-text-primary fa-2x"></i>',
+"SiteQty":'<i class="fa fa-quora  aui-text-primary fa-2x"></i>'};
+
+var moduleLinkMap = {"OaNotice":"noticelist","OaTask":"tasklist","OaWorkReport":"workreportlist","OaAppLeave":"leavelist",
+                    "OaAppTravel":"approval/travellist","OaAppOut":"approval/outlist","OaAppExpense":"approval/expenselist",
+                    "OaAppPurchase":"approval/purchaselist","OaAppApproves":"approval/approveslist",
+                  "SiteWorkLog":"site/workloglist","SiteDynamic":"site/dynamiclist","SiteTellTech":"site/telltechlist",
+                "SiteSafe":"site/safelist","SiteQty":"site/qtylist"};
+
+var isLoadRedPoint = true;
+
+template.config("escape", false);
+apiready = function(){
+     api.parseTapmode();
+    //initProjectName();
+
+    var header = $api.byId('aui-header');
+    $api.fixStatusBar(header);
+
+    var height = $("#header").height();
+    $('body').css('padding-top', height);
+
+  //   api.addEventListener({
+  //   name:'viewappear'
+  // },function(ret,err){
+  //
+  //   });
+
+    loadWorkRedItems(true);
+    initPull();
+};
+
+function initPull(){
+  var pullRefresh = new auiPullToRefresh({
+    container: document.querySelector('.aui-refresh-content'),
+    triggerDistance: 100
+},function(ret){
+    if(ret.status=="success"){
+      loadWorkRedItems(true);
+      setTimeout(function(){
+        pullRefresh.cancelLoading(); //刷新成功后调用此方法隐藏
+      },1500);
+    }
+})
+}
+
+
+
+function preWorkItemData(datalist){
+  var categoryIdx = 1;
+  var bandIdx = 2;
+  for (var i = 0; i < datalist.length; i++) {
+    var item = datalist[i];
+
+    //moduleBadgeCnt[item[0]]=item[3];
+
+    if(item[categoryIdx] && item[categoryIdx]!=""){
+      item[categoryIdx] =moduleCnMap[item[categoryIdx]];
+    }else{
+      item[categoryIdx]="消息";
+    }
+
+    if(item[bandIdx] && item[bandIdx]!=""){
+      item[bandIdx] =moduleBind[item[bandIdx]];
+    }else{
+      item[bandIdx]="";
+    }
+  }
+}
+
+function loadWorkRedItems(flag){
+  if(!flag){
+    if(!isLoadRedPoint)
+      return ;
+      isLoadRedPoint = false;
+      setTimeout(function(){isLoadRedPoint = true;}, 10000 );
+  }
+
+
+  if(TServerInfo.HasProjUserParam()){
+    var params = $.extend({},TServerInfo.getProjUserParam());//"ModuleGroup":"App"
+    AjaxApi.query("query_1017",params,function(data){
+      var datalist = data.list;
+      if(datalist){
+        preWorkItemData(datalist);
+        var tplData = {
+          "list" : datalist
+        };
+        var html = template("workitemListTpl", tplData);
+        $("#workItemListContent").html(html);
+
+      }
+      else{
+        $("#workItemListContent").html(gWhitespaceHtml);
+      }
+    });
+  }
+}
+
+function viewWorkItem(itemName){
+  var winlink = moduleLinkMap[itemName];
+  openModule(winlink);
+
+  // if(moduleBadgeCnt[itemName] && moduleBadgeCnt[itemName]>0){
+  //   var params = $.extend({"ModuleGroup":"Work","Module":itemName},TServerInfo.getProjUserParam());
+  //   AjaxApi.exec("query_9003",params,function(data){
+  //       $("#badge_"+itemName).css("display","none");
+  //       moduleBadgeCnt[itemName]=0;
+  //       openModule(winlink);
+  //   });
+  // }else{
+  //   openModule(winlink);
+  // }
+
+}
+
+function openModule(modulePath)
+{
+  var realModuleName = modulePath;
+  var idx = modulePath.lastIndexOf("/");
+  if(idx>=0){
+    realModuleName =modulePath.substr(idx+1);
+  }
+
+  api.openWin({
+                name:  realModuleName+"_win",
+                url: "html/"+modulePath+"_win.html",
+                pageParam: {
+                    isFrame: false
+                },
+                bgColor: '#FFFFFF',
+                slidBackEnabled: false,
+                vScrollBarEnabled:false,
+                hScrollBarEnabled:false,
+                delay: 0
+            }
+    );
+}
+
+function swithModuleGroup(){
+    setProjectInfo($api.getStorage("projectId"),$api.getStorage("projectName"));
+
+    loadWorkRedItems();
+
+}
+
+function selectProject(){
+  api.openWin({
+                name: "app_selectproject",
+                url: "selectproject.html",
+                pageParam: {
+                    isFrame: false,
+                    srcWinName:"root",
+                    srcFrameName:"index.work"
+                },
+                bgColor: '#FFFFFF',
+                slidBackEnabled: false,
+                vScrollBarEnabled:false,
+                hScrollBarEnabled:false,
+                delay: 100
+            }
+    );
+}
+
+function setSelectProject(id,name,lon,lat){
+  setStorageProjectInfo(id,name,lon,lat);
+  setProjectInfo(id,name);
+}
+
+function setProjectInfo(id,name){
+  if(name=="") name="[选择项目]";
+  $("#worktitle").html(name);
+}
+
+function clearLastProjectData(){
+  $("#workItemListContent").html(gWhitespaceHtml);
+  dataisload = false;
+}
+
+function clearUserData(){
+  clearLastProjectData();
+}
+</script>
+</html>

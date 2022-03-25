@@ -1,0 +1,416 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../css/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="../css/aui-pull-refresh.css" />
+    <style type="text/css">
+    .am-with-fixed-tab {
+      padding-top: 2rem;
+    }
+    </style>
+</head>
+<body class="am-with-fixed-tab">
+  <div id="header" class="am-header-fixed">
+    <div class="aui-tab " id="tab" >
+        <div class="aui-tab-item aui-active"><div id="badge_2" name="badge_tip" class="aui-badge" style="left:70%;display:none;" ></div>我审批的</div>
+        <div class="aui-tab-item"><div id="badge_0" name="badge_tip" class="aui-badge" style="left:70%;display:none;" ></div>我提交的</div>
+        <div class="aui-tab-item"><div id="badge_1" name="badge_tip" class="aui-badge" style="left:70%;display:none;" ></div>抄送给我</div>
+    </div>
+  </div>
+
+    <section class="aui-refresh-content">
+        <ul id="leaveContent" name="leaveTabContent" class="aui-list aui-media-list" style="background-color:#f5f5f5">
+<br/>  <br/><br/><br/><br/><br/><br/>  <br/><br/><br/><br/><br/>
+        </ul>
+
+        <ul id="myLeaveContent" name="leaveTabContent" class="aui-list aui-media-list" style="background-color:#f5f5f5;display:none">
+
+<br/>  <br/><br/><br/><br/><br/><br/>  <br/><br/><br/><br/><br/>
+        </ul>
+        <ul id="linkLeaveContent" name="leaveTabContent" class="aui-list aui-media-list" style="background-color:#f5f5f5;display:none">
+<br/>  <br/><br/><br/><br/><br/><br/>  <br/><br/><br/><br/><br/>
+        </ul>
+      </section>
+
+
+    <script id="leaveTpl" type="text/html">
+
+        {{each list}}
+        <li class="aui-list-item aui-list-item-middle" style="background-color:#ffffff;" onclick="approveLeave('{{$value[0]}}',{{$value[8]}})">
+            <div id="dot_{{$value[0]}}" class="aui-left-1 aui-dot aui-pull-left " style="display:none"></div>
+            <div class="aui-media-list-item-inner">
+                <div class="aui-list-item-inner" style="width:100%">
+                  <div class="aui-row aui-list-item-text " >
+                      <div class="aui-col-xs-8 aui-text-left" style="display:inline-flex;">
+                          <span class="aui-ellipsis" style="width:16em;">{{$value[2] | formatKind}} -  {{$value[1]}} - {{$value[7]}}</span>
+                      </div>
+                      <div class="aui-col-xs-4 aui-text-left">
+                        {{if $value[8]==1 }}
+                        <span>&nbsp;<div class="aui-badge">  待审批</div></span>
+                        {{/if}}
+                      </div>
+                  </div>
+                </div>
+            </div>
+            <div class="aui-row aui-list-item-text aui-font-size-12 aui-padded-t-5 aui-padded-b-10 aui-padded-r-15" >
+              <div class="aui-col-xs-4 aui-text-left"> 开始:{{$value[3]}}</div>
+              <div class="aui-col-xs-4 aui-text-right">结束:{{$value[4]}}</div>
+              <div class="aui-col-xs-4 aui-text-right">创建:{{$value[6]}}</div>
+            </div>
+        </li>
+
+        {{/each}}
+    </script>
+
+    <script id="myleaveTpl" type="text/html">
+
+        {{each list}}
+        <li class="aui-list-item aui-list-item-middle" style="background-color:#ffffff;" onclick="viewLeave('{{$value[0]}}',{{$value[5]}})">
+            <div class="aui-media-list-item-inner">
+                <div class="aui-list-item-inner" style="width:100%">
+                  <div class="aui-row aui-list-item-text" >
+                      <div class="aui-col-xs-8 aui-text-left" style="display:inline-flex;">
+                      <span class="aui-ellipsis" style="width:16em;">{{$value[2] | formatKind}} -  {{$value[1]}} - {{$value[7]}}</span>
+                      </div>
+                      <div class="aui-col-xs-4 aui-text-left">
+                     &nbsp;  <div class="aui-badge" style="background-color:{{$value[5] | formatStatusColor}}  !important;">  {{$value[5] | formatStatus}}</div>
+                      </div>
+                  </div>
+                </div>
+            </div>
+            <div class="aui-row aui-list-item-text aui-font-size-12 aui-padded-t-5 aui-padded-b-10 aui-padded-r-15" >
+              <div class="aui-col-xs-4 aui-text-left"> 开始:{{$value[3]}}</div>
+              <div class="aui-col-xs-4 aui-text-right">结束:{{$value[4]}}</div>
+              <div class="aui-col-xs-4 aui-text-right">创建:{{$value[6]}}</div>
+            </div>
+        </li>
+
+        {{/each}}
+    </script>
+
+    <script id="linkleaveTpl" type="text/html">
+
+        {{each list}}
+        <li class="aui-list-item aui-list-item-middle" style="background-color:#ffffff;" onclick="viewLeave('{{$value[0]}}')">
+            <div id="dot_{{$value[0]}}" class="aui-left-1 aui-dot aui-pull-left " style="display:none"></div>
+            <div class="aui-media-list-item-inner" >
+                <div class=" aui-list-item-inner" style="width:100%">
+                  <div class="aui-row aui-list-item-text" >
+                     <div class="aui-col-xs-8 aui-text-left" style="display:inline-flex;">
+                      <span class="aui-ellipsis" style="width:16em;">{{$value[2] | formatKind}} -  {{$value[1]}} - {{$value[7]}}</span>
+                    </div>
+                    <div class="aui-col-xs-4 aui-text-left">
+                   &nbsp;  <div class="aui-badge" style="background-color:{{$value[5] | formatStatusColor}}  !important;">  {{$value[5] | formatStatus}}</div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+            <div class="aui-row aui-list-item-text aui-font-size-12 aui-padded-t-5 aui-padded-b-10 aui-padded-r-15" >
+              <div class="aui-col-xs-4 aui-text-left"> 开始:{{$value[3]}}</div>
+              <div class="aui-col-xs-4 aui-text-right">结束:{{$value[4]}}</div>
+              <div class="aui-col-xs-4 aui-text-right">创建:{{$value[6]}}</div>
+            </div>
+        </li>
+
+        {{/each}}
+    </script>
+    <!-- {{if $value[6] ==0}}{{/if}} -->
+</body>
+<script type="text/javascript" src="../script/api.js" ></script>
+<script type="text/javascript" src="../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../script/common.js'></script>
+<script type='text/javascript' src='../script/queryapi.js'></script>
+<script type='text/javascript' src='../script/template.js'></script>
+<script type="text/javascript" src="../script/aui-pull-refresh.js"></script>
+<script type="text/javascript" src="../script/aui-scroll.js" ></script>
+<script type='text/javascript' src='../script/controls.js'></script>
+<script type="text/javascript" src="../script/aui-tab.js"></script>
+<script type="text/javascript">
+var entityName = "OaAppLeave";
+var tab;
+var tabIndex = 1;
+var tab1loaded = true;
+var tab2loaded = false;
+var tab3loaded = false;
+
+var pageComp = new PageComponent(0,10,loadLeaves);
+var pageCompMy = new PageComponent(0,10,loadMyLeaves);
+var pageCompLink = new PageComponent(0,10,loadLinkLeaves);
+
+var prNameMap={0:"事假",1:"年假",2:"病假"};
+template.helper('formatKind', function(pr) {
+  return prNameMap[pr];
+});
+
+template.helper('formatStatus', formatStatus);
+template.helper('formatStatusColor',formatStatusColor);
+
+apiready = function () {
+
+  var height = $("#header").height();
+  $('body').css('padding-top', height+1);
+
+createTab();
+  initPull();
+  initPullBottom();
+  pageComp.load();
+
+  api.addEventListener({
+  name:'viewappear'
+  },function(ret,err){
+    loadKindRedPoint();
+  });
+
+}
+
+function loadKindRedPoint(){
+  $("[name='badge_tip']").css("display","none");
+  AjaxApi.getkindredpoint(entityName);
+}
+
+//create callback
+function loadData(idx){
+  if(!idx){
+    idx = 2;
+  }
+
+  tab.setActive(idx);
+  tab1loaded = false;
+  tab2loaded = false;
+  tab3loaded = false;
+  switchTab(idx);
+
+
+}
+
+function initPull(){
+  var pullRefresh = new auiPullToRefresh({
+    container: document.querySelector('.aui-refresh-content'),
+    triggerDistance: 100
+},function(ret){
+    if(ret.status=="success"){
+      loadLeaveData();
+      setTimeout(function(){
+        pullRefresh.cancelLoading(); //刷新成功后调用此方法隐藏
+      },1500);
+    }
+})
+}
+
+function createTab(){
+  tab = new auiTab({
+   element:document.getElementById("tab"),
+},function(ret){
+  switchTab(ret["index"]);
+});
+}
+
+function switchTab(idx){
+  tabIndex = idx;
+  if(tabIndex == 1){
+    if(!tab1loaded) pageComp.load();
+    tab1loaded=true;
+    hideTabContents();
+  $("#leaveContent").css("display","block");
+  }else if(tabIndex==2){
+    if(!tab2loaded) pageCompMy.load();
+    tab2loaded=true;
+    hideTabContents();
+    $("#myLeaveContent").css("display","block");
+  }else if(tabIndex==3){
+    if(!tab3loaded) pageCompLink.load();
+    tab3loaded=true;
+    hideTabContents();
+    $("#linkLeaveContent").css("display","block");
+  }
+}
+
+function hideTabContents(){
+  $("*[name='leaveTabContent']").each(function(){
+    $(this).css("display","none");
+  });
+}
+
+function loadLeaveData(){
+  if(tabIndex==1){
+    pageComp.load();
+  }else if(tabIndex==2){
+    pageCompMy.load();
+  }else if(tabIndex==3){
+    pageCompLink.load();
+  }
+}
+
+function loadMoreLeaveData(){
+  if(tabIndex==1){
+    pageComp.loadMore();
+  }else if(tabIndex==2){
+    pageCompMy.loadMore();
+  }else if(tabIndex==3){
+    pageCompLink.loadMore();
+  }
+}
+
+function initPullBottom(){
+  var scroll = new auiScroll({
+          listen:true,
+          distance:5 //判断到达底部的距离，isToBottom为true
+      },function(ret){
+          if(ret.isToBottom){
+            loadMoreLeaveData();
+            //alert("已到达底部");
+              //document.getElementById("demo").textContent = "已到达底部";
+          }else{
+              //document.getElementById("demo").textContent = "滚动高度："+ret.scrollTop;
+
+          }
+
+      });
+
+}
+
+function loadLeaves(pagecomp){
+    pagecomp.setLoadState(true);
+    var param = $.extend(pagecomp.getPageParam(),TServerInfo.getProjUserParam());
+    AjaxApi.query("query_1141",param,function(data){
+      if(data.total) pagecomp.setTotal(data.total);
+
+      var datalist = data.list;
+      if(datalist){
+        var tplData = {
+          "list" : datalist
+        };
+        var html = template("leaveTpl", tplData);
+
+        if(pagecomp.getIsAppend()){
+          $("#leaveContent").append(html);
+        }else{
+          $("#leaveContent").html(html);
+        }
+      }else{
+        $("#leaveContent").html(gWhitespaceHtml);
+      }
+
+      pagecomp.setLoadState(false);
+
+      AjaxApi.getredpoint(entityName,2);
+    });
+}
+
+function loadMyLeaves(pagecomp){
+  pagecomp.setLoadState(true);
+  var param = $.extend(pagecomp.getPageParam(),TServerInfo.getProjUserParam());
+  AjaxApi.query("query_1142",param,function(data){
+    if(data.total) pagecomp.setTotal(data.total);
+
+    var datalist = data.list;
+    if(datalist){
+      var tplData = {
+        "list" : datalist
+      };
+      var html = template("myleaveTpl", tplData);
+
+      if(pagecomp.getIsAppend()){
+        $("#myLeaveContent").append(html);
+      }else{
+        $("#myLeaveContent").html(html);
+      }
+    }else{
+      $("#myLeaveContent").html(gWhitespaceHtml);
+    }
+    pagecomp.setLoadState(false);
+  });
+}
+
+function loadLinkLeaves(pagecomp){
+  pagecomp.setLoadState(true);
+  var param = $.extend(pagecomp.getPageParam(),TServerInfo.getProjUserParam());
+  AjaxApi.query("query_1146",param,function(data){
+    if(data.total) pagecomp.setTotal(data.total);
+
+    var datalist = data.list;
+    if(datalist){
+      var tplData = {
+        "list" : datalist
+      };
+      var html = template("linkleaveTpl", tplData);
+
+      if(pagecomp.getIsAppend()){
+        $("#linkLeaveContent").append(html);
+      }else{
+        $("#linkLeaveContent").html(html);
+      }
+    }else{
+      $("#linkLeaveContent").html(gWhitespaceHtml);
+    }
+    pagecomp.setLoadState(false);
+
+    AjaxApi.getredpoint(entityName,1);
+  });
+}
+
+function approveLeave(id,status){
+  api.openWin({
+                name: "leaveview_win",
+                url: "leaveview_win.html",
+                pageParam: {
+                    isFrame: false,
+                    leaveId:id,
+                    isdo:status
+                },
+                bgColor: '#FFFFFF',
+                slidBackEnabled: false,
+                vScrollBarEnabled:false,
+                hScrollBarEnabled:false,
+                delay: 0
+            }
+    );
+
+    AjaxApi.removeredpoint(id,entityName);
+}
+
+function viewLeave(id,status){
+  if(status == 0 || status == 3){
+    api.openWin({
+                  name: "leavecurd_win",
+                  url: "leavecurd_win.html",
+                  pageParam: {
+                      isFrame: false,
+                      leaveId:id
+                  },
+                  bgColor: '#FFFFFF',
+                  slidBackEnabled: false,
+                  vScrollBarEnabled:false,
+                  hScrollBarEnabled:false,
+                  delay: 0
+              }
+      );
+  }else{
+    api.openWin({
+                  name: "leaveview_win",
+                  url: "leaveview_win.html",
+                  pageParam: {
+                      isFrame: false,
+                      leaveId:id,
+                      isdo:0
+                  },
+                  bgColor: '#FFFFFF',
+                  slidBackEnabled: false,
+                  vScrollBarEnabled:false,
+                  hScrollBarEnabled:false,
+                  delay: 0
+              }
+      );
+  }
+
+  AjaxApi.removeredpoint(id,entityName);
+}
+
+</script>
+</html>

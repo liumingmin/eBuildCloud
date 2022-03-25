@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+</head>
+<body>
+    <header class="aui-bar aui-bar-nav aui-bar-light" id="aui-header">
+        <a class="aui-btn aui-pull-left" tapmode onclick="closeWin()">
+            <span class="aui-iconfont aui-icon-left"></span>
+        </a>
+        <div class="aui-title">任务发布</div>
+        <a name="__clickOnceBtn" class="aui-btn aui-pull-right" tapmode onclick="commit()">
+            <span class="aui-iconfont aui-icon-correct"></span>
+        </a>
+    </header>
+</body>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../css/amazeui/js/jquery.min.js"></script>
+<script type="text/javascript">
+    apiready = function(){
+        api.parseTapmode();
+        var header = $api.byId('aui-header');
+        $api.fixStatusBar(header);
+        var headerPos = $api.offset(header);
+        var body_h = $api.offset($api.dom('body')).h;
+        api.openFrame({
+            name: 'workreportcurd_frm',
+            url: 'workreportcurd_frm.html',
+            bounces: true,
+            rect: {
+                x: 0,
+                y: headerPos.h,
+                w: 'auto',
+                h: 'auto'
+            }
+        })
+    };
+    function closeWin(){
+        api.closeWin({
+        });
+    }
+
+    function commit(){
+      if($("*[name='__clickOnceBtn']").hasClass('__btnClickOnce')) {
+          return;
+      }
+      $("*[name='__clickOnceBtn']").addClass("__btnClickOnce");
+
+        api.execScript({
+          frameName: 'workreportcurd_frm',
+          script: 'commit()'
+         });
+    }
+
+    function enableClickOnceBtn(){
+      $("*[name='__clickOnceBtn']").removeClass("__btnClickOnce");
+    }
+</script>
+</html>

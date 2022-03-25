@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <title>title</title>
+		<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/font-awesome/css/font-awesome.min.css" />
+    <style>
+    	body{
+
+    	}
+    </style>
+</head>
+<body>
+	<section class="aui-content-padded">
+		<ul class="aui-list aui-form-list">
+			<li class="aui-list-item">
+					<div class="aui-list-item-inner">
+							<div class="aui-list-item-label">
+									开始日期
+							</div>
+							<div class="aui-list-item-input">
+										<input id="StartDate" placeholder="" type="text" readonly>
+							</div>
+							<div class="aui-pull-right  " style="width:40px !important">
+									<a onclick="datepick('StartDate')"  style="width:100%"> &gt;&gt;&nbsp;</a>
+							</div>
+
+					</div>
+			</li>
+		<li class="aui-list-item">
+				<div class="aui-list-item-inner">
+						<div class="aui-list-item-label">
+								截止日期
+						</div>
+						<div class="aui-list-item-input">
+									<input id="EndDate" placeholder="" type="text" readonly>
+						</div>
+						<div class="aui-pull-right  " style="width:40px !important">
+								<a onclick="datepick('EndDate')"  style="width:100%"> &gt;&gt;&nbsp;</a>
+						</div>
+
+				</div>
+		</li>
+		</ul>
+	</section>
+	<div id="main" style="height:15em;width:100%"></div>
+
+  <div id="signinKind" class="aui-font-size-14  aui-padded-l-15" style="color:#444444;"></div>
+	<ul id="signinContent" class="aui-list  aui-media-list" style="background-color:#f5f5f5">
+
+	</ul>
+
+	<script id="signinTpl" type="text/html">
+
+			{{each list}}
+			<li class="aui-list-item aui-list-item-middle " style="background-color:#ffffff;" >
+				<div class="aui-row aui-list-item-text aui-font-size-14 aui-padded-t-5 aui-padded-b-0 aui-padded-r-15" >
+					<div class="aui-col-xs-6 aui-text-left">{{$value["userName"]}}</div>
+					<div class="aui-col-xs-6 aui-text-right">{{$value["cnt"]}}工日</div>
+				</div>
+			</li>
+
+			{{/each}}
+	</script>
+</body>
+<script type='text/javascript' src='../../script/api2.js'></script>
+<script type="text/javascript" src="../../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../../script/common.js'></script>
+<script type='text/javascript' src='../../script/echarts-all.js'></script>
+<script type='text/javascript' src='../../script/queryapi.js'></script>
+<script type='text/javascript' src='../../script/template.js'></script>
+<script type="text/javascript">
+var signNameSign = "外勤";
+var signNameLeave = "请假";
+var signNameNoSign = "未打卡";
+var signNameLate = "迟到";
+var signNameOut = "早退";
+
+var signNames = [signNameSign,signNameLeave,signNameNoSign,signNameLate,signNameOut];
+
+	var myChart;
+	var lengendData = [];
+	var chartdata1 = [];
+  var projectUsers =[];
+  var projectUsersMap ={};
+	var projectUserName ={};
+	apiready = function(){
+		AjaxApi.query("query_3402",{"ProjectId":api.pageParam.projectId},function(data){
+			 projectUsers = data.list;
+			 for(var i=0;i< data.list.length;++i){
+				 var userId =data.list[i][0];
+				 projectUserName[userId]=data.list[i][2];
+				 projectUsersMap[userId] = {};
+				 for(var j=0;j<signNames.length;++j){
+					 projectUsersMap[userId][signNames[j]] = 0;
+				 }
+			 }
+
+			 initPage();
+		});
+	}
+
+	function initPage(){
+		//$("#main").css("width",)
+		myChart = echarts.init($("#main")[0]);
+		myChart.resize();
+	  myChart.on("click", onChartClick);
+
+		var now =new Date();
+		$("#EndDate").val(now.Format("yyyy-MM-dd"));
+		now.PrevMonth();
+	  $("#StartDate").val(now.Format("yyyy-MM-dd"));
+
+		loadProjSignInInfo(chartData);
+	}
+
+	function loadchartdata(chartlengend,chartdata1){
+		option = {
+				legend: {
+	        data:chartlengend
+	    	},
+		    series : [
+					{
+							name:'考勤统计',
+							 type:'pie',
+							data:chartdata1
+					}
+		    ]
+		};
+
+    myChart.clear();
+		myChart.hideLoading()
+		myChart.setOption(option);
+	}
+
+
+	function loadProjSignInInfo(callback){
+    AjaxApi.rest("retrievEntity","Project",api.pageParam.projectId,function(data){
+        var projectObj = data;
+        signInStartTime = projectObj.SignInStartTime;
+        $("#SignInStartTime").html(projectObj.SignInStartTime);
+        $("#SignInEndTime").html(projectObj.SignInEndTime);
+
+        callback(projectObj.SignInStartTime,projectObj.SignInEndTime,projectObj.SignInDays);
+    });
+  }
+
+	function getTotalSignCnt(projSignDay){
+    var projSignDays = projSignDay.split(",");
+
+		var startDate = $("#StartDate").val();
+		var endDate = $("#EndDate").val();
+		var dStartDate = new Date(Date.parse(startDate));
+		var dEndDate = new Date(Date.parse(endDate));
+		dStartDate.TrimDate();
+		dEndDate.TrimDate();
+
+		var daysm = dEndDate.getTime() - dStartDate.getTime();
+		var days = parseInt(daysm / (1000 * 60 * 60 * 24));
+		var workday=0;
+    for(var i=0;i<days;++i){
+        if(dStartDate>dEndDate)
+          break;
+        if($.inArray(dStartDate.getDay()+"",projSignDays)>=0){
+            ++workday;
+        }
+
+				dStartDate.NextDay();
+    }
+
+    return workday;
+  }
+
+	function chartData(projStartTime,projEndTime,projSignDay){
+		//var params = {"Ids":"'"+ids.join("','")+"'"};
+	  var totalSignCnt = getTotalSignCnt(projSignDay);
+		var param = $.extend({"StartDate":$("#StartDate").val(),"EndDate":$("#EndDate").val()},api.pageParam.projUserParam);
+		AjaxApi.query("query_3401",param,function(data2){
+					lengendData=[];
+					chartdata1=[];
+					var signCnt =0;var lateCnt=0;var outCnt=0; var normalCnt=0;
+
+    			if(data2 && data2.list && data2.list.length){
+						signCnt = data2.list.length;
+    				for(var i=0;i<data2.list.length;i++){
+    					var item = data2.list[i];
+							var userId =item[3];
+	            if(item[1] > projStartTime){
+	              ++lateCnt;
+								projectUsersMap[userId][signNameLate]=projectUsersMap[userId][signNameLate]+1;
+	            }
+
+	            if(item[2] < projEndTime){
+	              ++outCnt;
+								projectUsersMap[userId][signNameOut]=projectUsersMap[userId][signNameOut]+1;
+	            }
+
+	            if(item[1] <= projStartTime && item[2] >= projEndTime){
+	               ++normalCnt;
+	            }
+
+							projectUsersMap[userId][signNameSign]=projectUsersMap[userId][signNameSign]+1;
+    				}
+    			}
+
+					for(var key in projectUsersMap){
+						projectUsersMap[key][signNameNoSign]= totalSignCnt - projectUsersMap[key][signNameSign];
+					}
+
+					chartdata1.push({name:signNameSign,value: signCnt});
+					//leave
+					chartdata1.push({name:signNameNoSign,value:totalSignCnt*projectUsers.length- signCnt});
+					chartdata1.push({name:signNameLate,value:lateCnt});
+					chartdata1.push({name:signNameOut,value:outCnt});
+
+					for (var i=0;i<chartdata1.length;++i){
+						lengendData.push(chartdata1[i].name);
+					}
+
+					loadchartdata(lengendData,chartdata1);
+    		});
+	}
+
+	function onChartClick(param){
+			//var serise = param.seriesIndex;
+			var dataindex =param.dataIndex;
+			var kind = lengendData[dataindex];
+
+			$("#signinKind").html(kind);
+			var details = [];
+			for(var key in projectUsersMap){
+				var cnt=projectUsersMap[key][kind];
+				if (cnt>0){
+					details.push({"userName":projectUserName[key],"cnt":cnt})
+				}
+			}
+
+	    //alert(JSON.stringify(projectUsersMap));
+
+			var tplData = {
+				"list" : details
+			};
+			var html = template("signinTpl", tplData);
+
+			$("#signinContent").html(html);
+	}
+
+
+	function datepick(nodeid){
+	  api.openPicker({
+	      type: 'date',
+	      date: $("#"+nodeid).val(),
+	      title: '选择日期'
+	  }, function(ret, err) {
+	      if (ret) {
+	        var monthstr = ret.month+"";
+	        var daystr = ret.day+"";
+	          $("#"+nodeid).val(ret.year+"-"+monthstr.PadLeft(2,0)+"-"+daystr.PadLeft(2,0));
+	      }
+
+				loadProjSignInInfo(chartData);
+				$("#signinKind").html("");
+				$("#signinContent").html("");
+	  });
+	}
+</script>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/aui-pull-refresh.css" />
+    <style type="text/css">
+    .datehint{
+      text-align: center;
+      color: rgb(0, 128, 255);
+    }
+    </style>
+</head>
+
+<body>
+  <ul class="aui-list aui-list-in">
+    <li class="datehint">
+        &nbsp;
+    </li>
+  </ul>
+
+  <section class="aui-refresh-content">
+        <ul id="workerBonusContent" class="aui-list aui-list-in">
+
+        </ul>
+  </section>
+
+
+  <script id="workerBonusTpl" type="text/html">
+  		 {{each list}}
+  		  	 <li id='wb_{{$value["Key"]}}'  class="aui-list-item">
+  		  	 	{{$value["Key"]}}
+  		  	</li>
+
+  		  		 {{each $value["Items"]}}
+             <li class="aui-list-item aui-margin-l-15">
+                 <div class="aui-list-item-inner">
+                     <div class="aui-list-item-left">
+                         <input id="check{{$value[0]}}" type="checkbox" name="check" class="aui-checkbox" value="{{$value[0]}}" checked>
+                         <input id="bonus{{$value[0]}}" type="hidden" value="{{$value[3]}}" />
+                          <input id="dailyWages{{$value[0]}}" type="hidden" value="{{$value[5]}}" />
+
+                         <span>{{$value[1]}}</span>
+                     </div>
+                     <div class="aui-list-item-right aui-text-right" style="width:6em">
+                     <span class="aui-text-right">{{$value[6]}} 元/日</span>
+                     </div>
+                     <div class="aui-list-item-right">
+                         <div class="aui-bar aui-bar-btn aui-bar-btn-sm" style="width:60%;float:right">
+                             <div class="aui-bar-btn-item" tapmode onclick="numMinus('{{$value[0]}}')">
+                                 <i class="aui-iconfont aui-icon-minus"></i>
+                             </div>
+                             <div class="aui-bar-btn-item">
+                               <input id="input{{$value[0]}}" type="text" class="aui-input aui-text-center" onkeyup="num(this)" maxlength="3" style="width:2em" value="{{$value[4]}}"/>
+                             </div>
+                             <div class="aui-bar-btn-item" tapmode onclick="numPlus('{{$value[0]}}')">
+                                 <i class="aui-iconfont aui-icon-plus"></i>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+             </li>
+  				  {{/each}}
+  		  {{/each}}
+
+  	</script>
+
+</body>
+
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../../script/common.js'></script>
+<script type='text/javascript' src='../../script/queryapi.js'></script>
+<script type='text/javascript' src='../../script/template.js'></script>
+<script type="text/javascript" src="../../script/aui-toast.js" ></script>
+<script type='text/javascript' src='../../script/controls.js'></script>
+<script type="text/javascript" src="../../script/bluebird.min.js" ></script>
+<script type="text/javascript" src="../../script/hammer.min.js"></script>
+<script type='text/javascript' src='../../script/underscore-min.js'></script>
+<script type="text/javascript">
+var toast = new auiToast();
+apiready = function(){
+  api.parseTapmode();
+
+  if(api.pageParam.timestamp && api.pageParam.timestamp!=""){
+     loadWorkerBonus(api.pageParam.timestamp);
+
+     var d = new Date();
+     d.setTime(api.pageParam.timestamp);
+     $(".datehint").text(d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate());
+  }
+}
+
+
+function loadWorkerBonus(timestamp){
+  var param = $.extend({"Timestamp":(timestamp/1000)+""},TServerInfo.getProjUserParam());
+
+  AjaxApi.query("query_2004",param,function(data){
+    var datalist = data.list;
+    if(datalist){
+      datalist = procWorkerBonus(datalist);
+
+      var tplData = {
+        "list" : datalist
+      };
+
+      var html = template("workerBonusTpl", tplData);
+
+      $("#workerBonusContent").html(html);
+    }else{
+      $("#workerBonusContent").html(gWhitespaceHtml);
+    }
+  });
+}
+
+
+function procWorkerBonus(datalist){
+    var gs = _.groupBy(datalist, function(item){ return item[2]; });
+    var gsArray = [];
+    for(var key in gs){
+      gsArray.push({"Key":key,"Items":gs[key]});
+    }
+
+    var sortedGsArray = _.sortBy(gsArray,"Key");
+    return sortedGsArray;
+}
+
+function numPlus(index){
+  var inputId = "#input" + index;
+  var hours = parseFloat($(inputId).val());
+  if(hours<1){
+    $(inputId).val((hours+0.1).toFixed(1));
+  }
+}
+
+function numMinus(index){
+  var inputId = "#input" + index;
+  var hours = parseFloat($(inputId).val());
+  if(hours>0){
+    $(inputId).val((hours-0.1).toFixed(1));
+  }
+}
+
+function num(obj){
+    obj.value = obj.value.replace(/[^\d.]/g,""); //清除"数字"和"."以外的字符
+    obj.value = obj.value.replace(/^\./g,""); //验证第一个字符是数字
+    obj.value = obj.value.replace(/\.{2,}/g,"."); //只保留第一个, 清除多余的
+    obj.value = obj.value.replace(".","$#$").replace(/\./g,"").replace("$#$",".");
+    obj.value = obj.value.replace(/^(\-)*(\d+)\.(\d\d).*$/,'$1$2.$3'); //只能输入两个小数
+}
+
+function commit()
+{
+  enableClickOnceBtn();
+
+  toast.loading({
+        title:"正在保存...",
+        duration:2000
+    },function(ret){
+
+    });
+
+    saveWorkerBonus();
+}
+
+var workerBonusEntityOp = new EntityBatchOp("SiteWorkerBonus","WorkDay");
+
+function saveWorkerBonus(){
+  var entObjs = [];
+  $("input[name='check']:checked").each(function(i){
+    var workerId = $(this).val();
+    var workday = parseFloat($("#input"+workerId).val());
+    if(workday<=0|| workday>1){
+      return ;
+    }
+
+    var dailyWages = parseFloat($("#dailyWages"+workerId).val());
+
+    var ownerId = GetUuid();
+
+    var iscreate = true ;
+    var bonusId = $("#bonus"+workerId).val();
+    if (bonusId&&bonusId!=null&&bonusId!="null"&&bonusId!=""){
+        ownerId = bonusId;
+        iscreate = false ;
+    }
+
+    var entObj = {"Id":ownerId,
+          "UserId":TServerInfo.getUserId(),
+          "ProjectId":TServerInfo.getProjectId(),
+          "Timestamp":api.pageParam.timestamp/1000,
+          "WorkerId":workerId,
+          "WorkDay":workday,
+          "DailyWages":dailyWages
+        };
+
+    if(iscreate){
+      workerBonusEntityOp.addEntity(entObj);
+    }else{
+      workerBonusEntityOp.updateEntity(entObj);
+    }
+  });
+
+  AjaxApi.batchSave([workerBonusEntityOp],[],
+    {"noTips":true},function(data){
+       saveSuccess();
+  });
+}
+
+function saveSuccess(){
+  api.toast({
+      msg : "提交成功!",
+      duration : 1000,
+      location : 'bottom'
+    });
+
+setTimeout(function(){reloadWorkCalendar();api.closeWin();},1000);
+}
+
+function enableClickOnceBtn(){
+  try{
+  api.execScript({
+    name: 'workerbonuscurd_win',
+    script: 'enableClickOnceBtn()'
+   });
+  }catch(e){}
+}
+
+function reloadWorkCalendar(){
+  try{
+  api.execScript({
+    name: 'workercostlist_win',
+    frameName: 'workercostlist_frm',
+    script: 'loadData()'
+   });
+  }catch(e){}
+}
+
+</script>
+
+</html>

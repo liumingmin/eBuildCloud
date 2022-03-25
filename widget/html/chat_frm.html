@@ -1,0 +1,436 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <style type="text/css">
+        .aui-list .aui-list-item-media {
+            width: 3rem;
+        }
+        .notes-add {
+            position: fixed;
+            left: 0.5rem;
+            bottom: 0.5rem;
+            width: 3rem;
+            z-index: 99;
+        }
+        textarea {
+            height: 8rem;
+            background-color: #ffffff;
+            padding: 0.5rem;
+        }
+        .photos img {
+            display: block;
+            width: 100%;
+        }
+        .add-photos > div {
+            width: 100%;
+            height:5.15rem;
+            line-height: 5.15rem;
+        }
+        .add-photos > div .aui-iconfont {
+            font-size: 2rem;
+            color: #ccc;
+        }
+        .image-item {
+            position: relative;
+            height: 5.3rem;
+            overflow: hidden;
+            background-color: #f0f0f0;
+        }
+        .image-item img {
+            display: block;
+            margin: 0 auto;
+            width: auto;
+            height: 100%;
+        }
+        .image-item .delete-btn {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 28px;
+            height: 28px;
+            background-color: rgba(0,0,0,0.7);
+            margin-left: -14px;
+            margin-top: -14px;
+            color: #ffffff;
+            text-align: center;
+            border-radius: 50%;
+        }
+
+
+    </style>
+</head>
+<body onclick="cancelImage()">
+  <section id="chatContent" class="aui-chat">
+
+
+</section>
+
+<div id="noitem" style="line-height:60px">
+  &nbsp;&nbsp;&nbsp;
+</div>
+
+<script id="msgTpl" type="text/html">
+  {{each list}}
+
+{{if $value[4] == 1}}
+<div class="aui-chat-item aui-chat-right">
+    <div class="aui-chat-media">
+        <img class="aui-avatar-size-sm" src="{{$value[3]}}" />
+    </div>
+    <div class="aui-chat-inner">
+        <div class="aui-chat-name">{{$value[2]}}</div>
+        <div class="aui-chat-content">
+            <div class="aui-chat-arrow"></div>
+            {{if $value[5] == "RC:ImgMsg"}}
+            <img  src="{{$value[7]}}" onclick="ImageApi.openImageBrowser(['{{$value[8]}}']);" />
+            {{/if}}
+
+            {{if $value[5] == "RC:TxtMsg"}}
+            {{$value[6]}}
+            {{/if}}
+        </div>
+    </div>
+</div>
+{{else}}
+<div class="aui-chat-item aui-chat-left">
+    <div class="aui-chat-media">
+      <img class="aui-avatar-size-sm" src="{{$value[3]}}" />
+    </div>
+    <div class="aui-chat-inner">
+        <div class="aui-chat-name">{{$value[2]}}</div>
+        <div class="aui-chat-content">
+            <div class="aui-chat-arrow"></div>
+            {{if $value[5] == "RC:ImgMsg"}}
+            <img  src="{{$value[7]}}" onclick="ImageApi.openImageBrowser(['{{$value[8]}}']);" />
+            {{/if}}
+
+            {{if $value[5] == "RC:TxtMsg"}}
+            {{$value[6]}}
+            {{/if}}
+        </div>
+    </div>
+</div>
+{{/if}}
+{{/each}}
+</script>
+
+</body>
+
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../script/common.js'></script>
+<script type='text/javascript' src='../script/template.js'></script>
+<script type="text/javascript" src="../script/imageapi.js"></script>
+<script type="text/javascript">
+var rong;
+var chatUserInfoMap={};//id picid realname url  isself,kind(string),sendMsg,sendImagethUmber，sendimage
+apiready = function(){
+  rong = api.require('rongCloud2');
+  initChatTools();
+
+  //resizeChatContentHeight();
+
+  chatUserInfoMap = JSON.parse(api.pageParam.chatUserInfoMap);
+
+  loadLastestMsg();
+
+  setTimeout(scrollToBottom,500);
+
+  api.addEventListener({
+    name: 'sendMsg'
+}, function(ret, err) {
+    // 发送消息后, 添加消息内容到页面
+    var msgObj = preProcMsg(ret.value.userId,ret.value.kind,ret.value.msg,ret.value.thumbPath,ret.value.imageUrl);
+    showMsg([msgObj]);
+});
+
+api.addEventListener({
+  name: 'receiveMsg'
+}, function(ret, err) {
+  // 收到消息后, 添加消息内容到页面
+  var msgObj = preProcMsg(ret.value.userId,ret.value.kind,ret.value.msg,ret.value.thumbPath,ret.value.imageUrl);
+  showMsg([msgObj]);
+});
+
+receiveMsg();
+}
+
+function loadLastestMsg(){
+  rong.getLatestMessages({
+    conversationType: 'DISCUSSION',
+    targetId: api.pageParam.conversationId,
+    count: 20
+}, function(ret, err) {
+    var datalist = ret.result;
+    var msgObjs=[];
+    for(var i=datalist.length-1;i>=0;--i){
+       var item = datalist[i];
+
+       if(!item.objectName.endWith("Msg")){
+           continue;
+       }
+
+       var msgObj = preProcMsg(item.senderUserId,item.objectName,item.content.text,item.content.thumbPath,item.content.imageUrl);
+       if(msgObj!=null){
+           msgObjs.push(msgObj);
+       }
+    }
+
+    //alert(JSON.stringify(msgObjs));
+    showMsg(msgObjs);
+});
+
+}
+
+function preProcMsg(sendUserId,kind,sendMsg,sendImageTh,sendImage){
+  var chatUserInfo = chatUserInfoMap[sendUserId];
+  if(chatUserInfo){
+     if(!chatUserInfo[3] || chatUserInfo[3]==""){
+        chatUserInfo[3]="../image/user.jpg";
+     }
+     var isself = (sendUserId == TServerInfo.getUserId())?1:0;
+     chatUserInfo = chatUserInfo.concat([isself,kind,sendMsg,sendImageTh,sendImage]);
+  }
+  return chatUserInfo;
+}
+
+function showMsg(datalist){
+  var tplData = {
+    "list" :datalist
+  };
+
+  var html = template("msgTpl", tplData);
+  $("#chatContent").append(html);
+
+  scrollToBottom();
+}
+
+function scrollToBottom(){
+  var h = $(document).height()-$(window).height();
+  $(document).scrollTop(h+10);
+}
+
+function cancelImage(){
+  var UIChatTools = api.require('UIChatTools');
+  UIChatTools.closeBoard();
+}
+
+function initChatTools(){
+  var UIChatTools = api.require('UIChatTools');
+  UIChatTools.open({
+      chatBox: {
+          placeholder: '聊天内容',
+          autoFocuse: true,
+          maxRows: 6
+      },
+      styles: {
+          bgColor: '#D1D1D1',
+          margin: 10,
+      },
+      tools: {
+          h: 35,
+          iconSize: 30,
+          // recorder: {
+          //     normal: 'fs://UIChatTolls/recorder.png',
+          //     selected: 'fs://UIChatTolls/recorder1.png'
+          // },
+          image: {
+              normal: 'fs://UIChatTolls/image.png',
+              selected: 'fs://UIChatTolls/image1.png'
+          },
+          // video: {
+          //     normal: 'fs://UIChatTolls/video.png',
+          //     selected: 'fs://UIChatTolls/video1.png'
+          // },
+          // face: {
+          //     normal: 'fs://UIChatTolls/face2.png',
+          //     selected: 'fs://UIChatTolls/face1.png'
+          // },
+          // append: {
+          //     normal: 'fs://UIChatTolls/append.png',
+          //     selected: 'fs://UIChatTolls/append1.png'
+          // }
+      },
+      // 表情
+      emotions:['widget://res/emotions/basic','widget://res/emotions/append1','widget://res/emotions/append2']
+  }, function(ret) {
+      if (ret) {
+          if (ret.eventType === 'send') {
+              // 发送消息
+              if(ret.msg && ret.msg!=""){
+                sendMsg(ret.msg);
+                UIChatTools.clearText();
+              }
+
+          }
+      }
+  });
+
+  UIChatTools.imageListener(function(ret){
+    if(ret.eventType == "send"){
+      if(!ret.images)
+      return ;
+
+      sendImages(ret.images);
+    }else if(ret.eventType == "album"){
+        ImageApi.selectImage({},function(imgUrl){
+        if(!imgUrl)
+          return;
+
+        var imgUrls = [];
+        if(imgUrl instanceof Array){
+          imgUrls = imgUrl;
+        }else{
+          imgUrls.push(imgUrl);
+        }
+        sendImages(imgUrls);
+      });
+    }
+
+  });
+
+  UIChatTools.faceListener({
+    name: 'face'
+}, function(ret) {
+    //api.alert({msg:JSON.stringify(ret)});
+});
+  // UIChatTools.toolsListener(function(ret) {
+  //     if (ret.eventType == 'video') {
+  //         api.alert({
+  //             title: 'title',
+  //             msg: 'video',
+  //         }, function(ret, err) {
+  //             if (ret) {
+  //                 alert(JSON.stringify(ret));
+  //             } else {
+  //                 alert(JSON.stringify(err));
+  //             }
+  //         });
+  //     }
+  // });
+
+  //var UIChatTools = api.require('UIChatTools');
+    UIChatTools.chatBoxListener({
+            name:'move'
+    }, function(ret){
+        resizeChatContentHeight(ret.chatBoxHeight);
+    });
+    UIChatTools.chatBoxListener({
+               name:'change'
+    }, function(ret){
+        resizeChatContentHeight(ret.chatBoxHeight);
+    });
+}
+
+function sendImages(images){// ret.images
+  for(var i=0;i<images.length;++i){
+    rong.sendImageMessage({
+      conversationType: 'DISCUSSION',
+      targetId: api.pageParam.conversationId,
+      imagePath: images[i],
+      extra: ''
+    }, function(ret, err) {
+      if (ret.status == 'prepare'){
+        api.sendEvent({
+            name: 'sendMsg',
+            extra: {
+                msg: "",
+                kind:"RC:ImgMsg",
+                thumbPath:ret.result.message.content.imageUrl,
+                imageUrl:ret.result.message.content.imageUrl,
+                userId:TServerInfo.getUserId()
+            }
+        });
+      }
+
+      // else if (ret.status == 'progress')
+      //     api.toast({ msg: ret.result.progress });
+      // else if (ret.status == 'success')
+      //     api.toast({ msg: ret.result.message.messageId });
+
+      if (ret.status == 'success'){
+
+      }else if (ret.status == 'error'){
+        api.toast({ msg: err.code });
+      }
+
+    });
+  }
+}
+
+function resizeChatContentHeight(height){
+    $("#noitem").css("line-height",height+"px");
+}
+
+function receiveMsg() {
+   rong.setOnReceiveMessageListener(function(ret, err) {
+      // 由于聊天框界面和聊天内容不是一个页面所以要使用事件监听的方式通知聊天内容页面，传递参数
+      if(ret.result.message.targetId == api.pageParam.conversationId){
+        if(!ret.result.message.objectName.endWith("Msg")){
+            return ;
+        }
+        api.sendEvent({
+            name: 'receiveMsg',
+            extra: {
+                msg: ret.result.message.content.text,
+                userId:ret.result.message.senderUserId,
+                kind: ret.result.message.objectName,
+                thumbPath:ret.result.message.content.thumbPath,
+                imageUrl:ret.result.message.content.imageUrl
+            }
+        });
+      }
+    })
+}
+
+function sendMsg(msg) {
+  //var sendMsg;
+  rong.sendTextMessage({
+      conversationType: 'DISCUSSION',
+      targetId: api.pageParam.conversationId,
+      text: msg,
+      extra: ''
+  }, function(ret, err) {
+      if (ret.status == 'prepare') {
+        // 获取发送的消息内容
+        //sendMsg = ret.result.message.content.text;
+      }else if (ret.status == 'success') {
+          // 广播发送消息事件
+          api.sendEvent({
+              name: 'sendMsg',
+              extra: {
+                  msg: msg,
+                  userId:TServerInfo.getUserId(),
+                  kind:"RC:TxtMsg",
+                  thumbPath:"",
+                  imageUrl:""
+              }
+          });
+
+      }
+      else if (ret.status == 'error') {
+        api.toast({
+            msg: '网络故障，发送消息失败'
+        });
+          // api.alert({
+          //     title: 'title',
+          //     msg: err.code,
+          // }, function(ret, err) {
+          //     if (ret) {
+          //         alert(JSON.stringify(ret));
+          //     } else {
+          //         alert(JSON.stringify(err));
+          //     }
+          // });
+      }
+  });
+}
+
+
+</script>
+</html>

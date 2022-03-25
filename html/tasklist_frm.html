@@ -1,0 +1,319 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../css/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="../css/aui-pull-refresh.css" />
+    <style type="text/css">
+    .am-with-fixed-tab {
+      padding-top: 2rem;
+    }
+    </style>
+</head>
+<body class="am-with-fixed-tab">
+<div id="header" class="am-header-fixed">
+  <div class="aui-tab " id="tab" >
+      <div class="aui-tab-item aui-active"><div id="badge_3" class="aui-badge" style="left:70%;display:none;" ></div>我执行的</div>
+      <div class="aui-tab-item"><div id="badge_4" class="aui-badge" style="left:70%;display:none;" ></div>我督办的</div>
+      <div class="aui-tab-item"><div id="badge_0" class="aui-badge" style="left:70%;display:none;" ></div>我发布的</div>
+  </div>
+</div>
+
+    <section class="aui-refresh-content">
+      <ul id="execTaskContent" name="taskTabContent" class="aui-list  aui-media-list" style="background-color:#f5f5f5">
+<br/>  <br/><br/><br/><br/><br/><br/>  <br/><br/><br/><br/><br/>
+      </ul>
+
+      <ul id="superTaskContent" name="taskTabContent" class="aui-list aui-media-list" style="background-color:#f5f5f5;display:none">
+<br/>  <br/><br/><br/><br/><br/><br/>  <br/><br/><br/><br/><br/>
+      </ul>
+
+        <ul id="myTaskContent" name="taskTabContent" class="aui-list aui-media-list" style="background-color:#f5f5f5;display:none">
+<br/>  <br/><br/><br/><br/><br/><br/>  <br/><br/><br/><br/><br/>
+        </ul>
+
+      </section>
+
+
+    <script id="myTaskTpl" type="text/html">
+
+        {{each list}}
+        <li class="aui-list-item aui-list-item-middle " style="background-color:#ffffff;" onclick="viewTask('{{$value[0]}}',{{$value[7]}})">
+            <div id="dot_{{$value[0]}}" class="aui-left-1 aui-dot aui-pull-left " style="display:none"></div>
+            <div class="aui-list-item-inner aui-padded-t-10 aui-padded-b-5 aui-margin-b-5"
+             style="line-height:1rem;min-height: 0rem">
+                <div class="aui-list-item-text">
+                    <div class="aui-list-item-title">
+                      <span  class="aui-font-size-12 aui-label-danger aui-label-outlined">
+                            {{$value[5] | formatPriority}}</span>
+                      <span class="aui-font-size-16">{{$value[1]}}</span></div>
+                    <div class="aui-list-item-right aui-text-right" style="width:6rem">{{$value[2] |formatExpireDate}}</div>
+                </div>
+            </div>
+            <div class="aui-row aui-list-item-text aui-font-size-12 aui-padded-t-5 aui-padded-b-10 aui-padded-r-15" >
+              <div class="aui-col-xs-4 aui-text-left">发布人:{{$value[6]}}</div>
+              <div class="aui-col-xs-4 aui-text-center"> 发布时间:{{$value[3]}}</div>
+              <div class="aui-col-xs-4 aui-text-right">结束时间:{{$value[4]}}</div>
+            </div>
+
+        </li>
+
+        {{/each}}
+    </script>
+</body>
+<script type="text/javascript" src="../script/api.js" ></script>
+<script type="text/javascript" src="../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../script/common.js'></script>
+<script type='text/javascript' src='../script/queryapi.js'></script>
+<script type='text/javascript' src='../script/template.js'></script>
+<script type="text/javascript" src="../script/aui-pull-refresh.js"></script>
+<script type="text/javascript" src="../script/aui-scroll.js" ></script>
+<script type='text/javascript' src='../script/controls.js'></script>
+<script type="text/javascript" src="../script/aui-tab.js"></script>
+<script type="text/javascript">
+var tab;
+var tabIndex = 1;
+var tab2loaded = false;
+var tab3loaded=false;
+
+var pageCompMy = new PageComponent(0,10,loadMyTasks);
+var pageCompExec = new PageComponent(0,10,loadExecTasks);
+var pageCompSuper = new PageComponent(0,10,loadSuperTasks);
+
+var prNameMap={0:"普通",1:"重要",2:"紧急"};
+template.helper('formatPriority', function(pr) {
+  return prNameMap[pr];
+});
+
+template.helper('formatExpireDate', function(expTimeStr) {
+  var expTime = Date.parse(expTimeStr);
+  var dure = expTime - new Date();
+  if(dure>0){
+    var hours = parseInt(dure) / 1000 / 3600;
+    return "任务倒计时:"+parseInt(hours)+"小时";
+  }
+
+  return "已完成";
+});
+
+apiready = function () {
+  var height = $("#header").height();
+  $('body').css('padding-top', height+1);
+
+   tab = new auiTab({
+    element:document.getElementById("tab"),
+},function(ret){
+  switchTab(ret["index"]);
+});
+
+
+
+  pageCompExec.load();
+
+  initPull();
+  initPullBottom();
+
+  api.addEventListener({
+  name:'viewappear'
+  },function(ret,err){
+    loadKindRedPoint();
+  });
+}
+
+function loadKindRedPoint(){
+  $(".aui-badge").css("display","none");
+  AjaxApi.getkindredpoint("OaTask");
+}
+
+function switchTab(idx){
+  tabIndex = idx;
+  if(tabIndex == 1){
+    hideTabContents();
+  $("#execTaskContent").css("display","block");
+  }else if(tabIndex==2){
+    if(!tab2loaded) pageCompSuper.load();
+    tab2loaded=true;
+    hideTabContents();
+    $("#superTaskContent").css("display","block");
+  }else if(tabIndex==3){
+    if(!tab3loaded) pageCompMy.load();
+    tab3loaded=true;
+    hideTabContents();
+    $("#myTaskContent").css("display","block");
+  }
+}
+
+
+function loadData(){
+  if(tabIndex!=3)
+    tab.setActive(3);
+    tab3loaded = false;
+    switchTab(3);
+}
+
+function hideTabContents(){
+  $("*[name='taskTabContent']").each(function(){
+    $(this).css("display","none");
+  });
+}
+
+function initPull(){
+  var pullRefresh = new auiPullToRefresh({
+    container: document.querySelector('.aui-refresh-content'),
+    triggerDistance: 100
+},function(ret){
+    if(ret.status=="success"){
+      loadTaskData();
+      setTimeout(function(){
+        pullRefresh.cancelLoading(); //刷新成功后调用此方法隐藏
+      },1500);
+    }
+})
+}
+
+function loadTaskData(){
+  if(tabIndex==1){
+    pageCompExec.load();
+  }else if(tabIndex==2){
+    pageCompSuper.load();
+  }else if(tabIndex==3){
+    pageCompMy.load();
+  }
+}
+
+function loadMoreTaskData(){
+  if(tabIndex==1){
+    pageCompExec.loadMore();
+  }else if(tabIndex==2){
+    pageCompSuper.loadMore();
+  }else if(tabIndex==3){
+    pageCompMy.loadMore();
+  }
+}
+
+function initPullBottom(){
+  var scroll = new auiScroll({
+          listen:true,
+          distance:5 //判断到达底部的距离，isToBottom为true
+      },function(ret){
+          if(ret.isToBottom){
+            loadMoreTaskData();
+            //alert("已到达底部");
+              //document.getElementById("demo").textContent = "已到达底部";
+          }else{
+              //document.getElementById("demo").textContent = "滚动高度："+ret.scrollTop;
+
+          }
+
+      });
+
+}
+
+function loadExecTasks(pagecomp){
+  pagecomp.setLoadState(true);
+  var param = $.extend(pagecomp.getPageParam(),TServerInfo.getProjUserParam());
+  AjaxApi.query("query_1122",param,function(data){
+    if(data.total) pagecomp.setTotal(data.total);
+
+    var datalist = data.list;
+    if(datalist){
+      var tplData = {
+        "list" : datalist
+      };
+      var html = template("myTaskTpl", tplData);
+
+      if(pagecomp.getIsAppend()){
+        $("#execTaskContent").append(html);
+      }else{
+        $("#execTaskContent").html(html);
+      }
+    }
+    pagecomp.setLoadState(false);
+    AjaxApi.getredpoint("OaTask",3);
+  });
+}
+
+function loadSuperTasks(pagecomp){
+  pagecomp.setLoadState(true);
+  var param = $.extend(pagecomp.getPageParam(),TServerInfo.getProjUserParam());
+  AjaxApi.query("query_1123",param,function(data){
+    if(data.total) pagecomp.setTotal(data.total);
+
+    var datalist = data.list;
+    if(datalist){
+      var tplData = {
+        "list" : datalist
+      };
+      var html = template("myTaskTpl", tplData);
+
+      if(pagecomp.getIsAppend()){
+        $("#superTaskContent").append(html);
+      }else{
+        $("#superTaskContent").html(html);
+      }
+    }
+    pagecomp.setLoadState(false);
+    AjaxApi.getredpoint("OaTask",4);
+  });
+}
+
+function loadMyTasks(pagecomp){
+    pagecomp.setLoadState(true);
+    var param = $.extend(pagecomp.getPageParam(),TServerInfo.getProjUserParam());
+    AjaxApi.query("query_1121",param,function(data){
+      if(data.total) pagecomp.setTotal(data.total);
+
+      var datalist = data.list;
+      if(datalist){
+        var tplData = {
+          "list" : datalist
+        };
+        var html = template("myTaskTpl", tplData);
+
+        if(pagecomp.getIsAppend()){
+          $("#myTaskContent").append(html);
+        }else{
+          $("#myTaskContent").html(html);
+        }
+      }
+      pagecomp.setLoadState(false);
+      AjaxApi.getredpoint("OaTask",0);
+    });
+}
+
+function viewTask(id,kind){
+  // if(isview == 0){
+  //   //modify
+  //   AjaxApi.rest("updateEntity","OaNoticeLink",{"Id":linkid,"IsView":1},function(data){
+  //
+  //   },{"DataUpdateColumn":"IsView","noTips":true});
+  //
+  //   $("#"+linkid).css("display","none");
+  // }
+  //
+  api.openWin({
+                name: "taskfd_win",
+                url: "taskfd_win.html",
+                pageParam: {
+                    isFrame: false,
+                    taskId:id,
+                    taskKind:kind
+                },
+                bgColor: '#FFFFFF',
+                slidBackEnabled: false,
+                vScrollBarEnabled:false,
+                hScrollBarEnabled:false,
+                delay: 0
+            }
+    );
+
+    AjaxApi.removeredpoint(id,"OaTask");
+}
+
+</script>
+</html>

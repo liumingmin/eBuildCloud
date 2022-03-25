@@ -1,0 +1,149 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+</head>
+<body>
+    <header class="aui-bar aui-bar-nav aui-bar-light" id="aui-header">
+        <a class="aui-btn aui-pull-left" tapmode onclick="closeWin()">
+            <span class="aui-iconfont aui-icon-left"></span>
+        </a>
+        <div id="title" class="aui-title" onclick="modifyMeetingName()"></div>
+        <a  class="aui-btn aui-pull-right" tapmode onclick="openChatUsers()" style="">
+            <span class="aui-iconfont aui-icon-my"></span>
+        </a>
+    </header>
+</body>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../css/amazeui/js/jquery.min.js"></script>
+<script type="text/javascript">
+    apiready = function(){
+        api.parseTapmode();
+        var header = $api.byId('aui-header');
+        $api.fixStatusBar(header);
+        var headerPos = $api.offset(header);
+        var body_h = $api.offset($api.dom('body')).h;
+        api.openFrame({
+            name: 'chat_frm',
+            url: 'chat_frm.html',
+            //bounces: true,
+            rect: {
+                x: 0,
+                y: headerPos.h,
+                w: 'auto',
+                h: 'auto'
+            },
+            pageParam: {
+                srcWinName:api.pageParam.srcWinName,
+                srcFrameName:api.pageParam.srcFrameName,
+                conversationId:api.pageParam.conversationId,
+                conversatioinName: api.pageParam.conversationName,
+                chatUserInfoMap:api.pageParam.chatUserInfoMap
+            }
+        })
+
+        $("#title").html(api.pageParam.conversatioinName);
+    };
+    function closeWin(){
+        api.closeWin({
+        });
+    }
+
+    function openChatUsers(){
+      api.openWin({
+                   name: "chatuser_win",
+                   url: "chatuser_win.html",
+                   pageParam: {
+                       isFrame: false,
+                       conversationId:api.pageParam.conversationId,
+                       conversatioinName: api.pageParam.conversationName,
+                       chatUserInfoMap:api.pageParam.chatUserInfoMap
+                   },
+                   bgColor: '#FFFFFF',
+                   slidBackEnabled: false,
+                   vScrollBarEnabled:false,
+                   hScrollBarEnabled:false,
+                   delay: 0
+               }
+       );
+    }
+
+    function modifyMeetingName(){
+      var dialogBox = api.require('dialogBox');
+      dialogBox.input({
+          keyboardType: 'default',
+          tapClose:true,
+          texts: {
+              title: '名称',
+              placeholder: '',
+              leftBtnTitle: '取消',
+              rightBtnTitle: '确定'
+          },
+          styles: {
+              bg: '#fff',
+              corner: 2,
+              w: 300,
+              h: 240,
+              title: {
+                  h: 60,
+                  alignment: 'center',
+                  size: 14,
+                  color: '#000',
+                  marginT:30,
+              },
+              input: {
+                  h: 60,
+                  y:30,
+                  marginT:15,
+                  marginLeft: 10,
+                  marginRight:10,
+                  textSize: 14,
+                  textColor: '#000'
+              },
+              dividingLine: {
+                  width: 0.5,
+                  color: '#696969'
+              },
+              left: {
+                  bg: 'rgba(0,0,0,0)',
+                  color: '#007FFF',
+                  size: 12
+        },
+        right: {
+            bg: 'rgba(0,0,0,0)',
+            color: '#007FFF',
+            size: 12
+        }
+    }
+}, function(ret) {
+
+    if (ret.eventType == 'left') {
+
+    }else if (ret.eventType == 'right') {
+        var rong = api.require('rongCloud2');
+        var newtitle = ret.text;
+        rong.setDiscussionName({
+            discussionId: api.pageParam.conversationId,
+            name: newtitle
+        }, function(ret, err) {
+            if (ret.status == 'success'){
+               api.pageParam.conversatioinName = newtitle;
+               $("#title").html(newtitle);
+              api.toast({ msg: "修改成功" });
+            }
+            else
+                api.toast({ msg: err.code });
+        });
+    }
+
+        var dialogBox = api.require('dialogBox');
+        dialogBox.close({
+            dialogName: 'input'
+        });
+    });
+    }
+</script>
+</html>

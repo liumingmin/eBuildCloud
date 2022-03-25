@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+  <html>
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+      <title>title</title>
+      <link rel="stylesheet" type="text/css" href="css/app.css" />
+      <link rel="stylesheet" type="text/css" href="css/aui.css" />
+      <link rel="stylesheet" type="text/css" href="css/font-awesome/css/font-awesome.min.css" />
+      <link rel="stylesheet" type="text/css" href="css/aui-pull-refresh.css" />
+      <style>
+          body{
+
+          }
+          .am-with-fixed-tab {
+            padding-top: 4.5rem;
+          }
+          .aui-list-item.wechat-top {
+              background-color: #f3f3f7;
+          }
+          .aui-list .wechat-avatar {
+              width:3rem;
+
+          }
+          .wechat-avatar .aui-row-padded {
+              background-color: #dddee0;
+              padding: 0.1rem;
+              border-radius: 0.2rem;
+              margin-left: -0.05rem;
+              margin-right: -0.05rem;
+          }
+          .wechat-avatar .aui-row-padded [class*=aui-col-xs-] {
+              padding: 0.05rem;
+          }
+          .wechat-avatar,
+          .wechat-avatar > img {
+              border-radius:0.2rem;
+          }
+
+          .rect-image{
+            height:1rem;
+          }
+
+      </style>
+  </head>
+  <body>
+    <body class="am-with-fixed-tab">
+      <div  id="header" class="am-header-fixed">
+      <header id="aui-header" class="aui-bar aui-bar-nav aui-bar-light ">
+      <a class="aui-pull-left aui-btn">
+          <span class="aui-text-primary">
+            <!-- <i class="fa fa-lg  fa-minus-square-o"></i> -->
+          </span>
+      </a>
+      <div  class="aui-title" ><span id="worktitle" onclick="selectProject()">[选择项目]</span>&nbsp;<i onclick="selectProject()" class="fa aui-text-success  fa-refresh"></i></div>
+      <a class="aui-pull-right aui-btn ">
+
+        <span class="aui-iconfont aui-icon-plus"  onclick="openMenu()" ></span>
+      </a>
+
+      </header>
+      <div class="aui-tab " id="tab" >
+          <div class="aui-tab-item aui-active">微会议</div>
+          <div class="aui-tab-item"><div id="badge_" class="aui-badge" style="left:75%;display:none"></div>项目联系人
+        &nbsp;<a onclick="loadProjContactList(null,true)"><i class="aui-text-primary fa fa-sort"></i></a></div>
+          <div class="aui-tab-item">手机联系人</div>
+      </div>
+
+      <!-- <div class="aui-searchbar" id="search">
+          <div class="aui-searchbar-input aui-border-radius" tapmode onclick="doSearch()">
+              <i class="aui-iconfont aui-icon-search"></i>
+              <form action="javascript:search();">
+                  <input type="search" placeholder="请输入搜索内容" id="search-input">
+              </form>
+          </div>
+          <div class="aui-searchbar-cancel " tapmod>取消</div>
+      </div> -->
+
+      </div>
+
+
+    <div >
+    <section class="aui-refresh-content ">
+
+      <ul id="meetingListContent"  name="contactTabContent" class="aui-list aui-media-list aui-content" style="background-color:#f5f5f5">
+
+<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+
+      </ul>
+
+      <ul id="projContactListContent" name="contactTabContent" class="aui-list aui-media-list aui-content" style="background-color:#f5f5f5;display:none">
+<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+      </ul>
+
+        <ul  id="phoneContactListContent"  name="contactTabContent" class="aui-list aui-media-list aui-content" style="background-color:#f5f5f5;display:none">
+<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+        </ul>
+
+
+    </section>
+    </div>
+
+    <script id="meetingListTpl" type="text/html">
+    {{each list}}
+    {{if $value["conversationType"]=="PRIVATE" }}
+    <li class="aui-list-item aui-list-item-middle" onclick=openChat('{{$value["targetId"]}}','{{$value["conversationTitle"]}}')>
+        <div class="aui-media-list-item-inner">
+            <div class="aui-list-item-media wechat-avatar">
+              {{if $value["unreadMessageCount"] !=0}}
+              <div id='badge_{{$value["targetId"]}}' class="aui-badge">{{$value["unreadMessageCount"]}}</div>
+                {{/if}}
+               <div class="aui-row-padded">
+                   {{each $value["userImages"]}}
+                   <div class="aui-col-xs-6">
+                       <img class="rect-image" src="{{$value}}" />
+                   </div>
+                   {{/each}}
+               </div>
+            </div>
+            <div class="aui-list-item-inner">
+                <div class="aui-list-item-text">
+                    <div class="aui-list-item-title"><span class="aui-ellipsis" style="width:10em;">{{$value["conversationTitle"]}}</span></div>
+                    <div class="aui-list-item-right">{{$value["receivedTime"]}}</div>
+                </div>
+                <div class="aui-list-item-text aui-font-size-12">
+                  {{$value["latestMessage"]["text"]}}&nbsp;
+                </div>
+            </div>
+        </div>
+    </li>
+    {{else}}
+    <li class="aui-list-item aui-list-item-middle " onclick=openChat('{{$value["targetId"]}}','{{$value["conversationTitle"]}}')>
+        <div class="aui-media-list-item-inner">
+            <div class="aui-list-item-media wechat-avatar">
+               {{if $value["unreadMessageCount"] !=0}}
+               <div id='badge_{{$value["targetId"]}}' class="aui-badge">{{$value["unreadMessageCount"]}}</div>
+                 {{/if}}
+                <div class="aui-row-padded">
+                    {{each $value["userImages"]}}
+                    <div class="aui-col-xs-6">
+                        <img class="rect-image" src="{{$value}}" />
+                    </div>
+                    {{/each}}
+                </div>
+
+            </div>
+            <div class="aui-list-item-inner">
+                <div class="aui-list-item-text">
+                  <div class="aui-list-item-title"><span class="aui-ellipsis" style="width:10em;">{{$value["conversationTitle"]}}</span></div>
+                  <div class="aui-list-item-right">{{$value["receivedTime"]}}</div>
+                </div>
+                <div class="aui-list-item-text aui-font-size-12">
+                    {{$value["latestMessage"]["text"]}}&nbsp;
+                </div>
+            </div>
+        </div>
+    </li>
+    {{/if}}
+    {{/each}}
+    </script>
+
+    <script id="projContactListTpl" type="text/html">
+
+        {{each list}}
+        <li class="aui-list-item aui-list-item-middle" style="background-color:#ffffff;" onclick="">
+            <div class="aui-media-list-item-inner">
+              <div class="aui-list-item-media"  style="width:auto;">
+                <input  class="aui-checkbox aui-margin-r-15 " style="height:30px;width:30px;margin-top:5px;" type="checkbox"
+                name="userCheck" realName="{{$value[2]}}" userId="{{$value[0]}}"/>
+                  <img src=" {{$value[3]}}"   style="height:40px;width:40px" class="aui-img-round"/>
+              </div>
+                <div class="aui-list-item-inner">
+                    <div class="aui-list-item-text">
+                        <div class="aui-list-item-title">
+                          {{$value[2]}}({{$value[1]}})</div>
+                        <div class="aui-list-item-right">
+                          <!-- <div class="aui-btn aui-btn-outlined aui-btn-info  aui-margin-r-10 aui-font-size-12" onclick="">分组</div> -->
+                        </div>
+                    </div>
+                    <div class="aui-list-item-text aui-font-size-12">
+                   标签:{{$value[4]}} &nbsp;
+                    </div>
+                </div>
+            </div>
+        </li>
+        {{/each}}
+    </script>
+
+    <script id="phoneContactListTpl" type="text/html">
+
+        {{each list}}
+        <li class="aui-list-item aui-list-item-middle" style="background-color:#ffffff;" onclick="">
+          <div class="aui-list-item-inner">
+              <div class="aui-list-item-text">
+                  <div class="aui-list-item-title">
+                    {{$value["fullName"]}}</div>
+                  <div class="aui-list-item-right">
+                    <div class="aui-btn aui-btn-outlined aui-btn-info  aui-margin-r-10" onclick='inviteUsers("{{$value["phones"]}}")'>邀请</div>
+                  </div>
+              </div>
+              <div class="aui-list-item-text aui-font-size-12">
+             {{$value["phones"]}} &nbsp;
+              </div>
+          </div>
+        </li>
+        {{/each}}
+    </script>
+
+    <div  class="aui-popup aui-popup-top-right " style="margin-top:2.45rem;z-index: 2010 !important;"  id="top-right" >
+    <div class="aui-popup-arrow"></div>
+    <div class="aui-popup-content">
+        <ul class="aui-list aui-list-noborder">
+            <li class="aui-list-item" onclick="addTag()">
+                <div class="aui-list-item-label-icon">
+                    <i class="fa fa-plus-square-o aui-text-primary"></i>
+                </div>
+                <div class="aui-list-item-inner aui-list-item-middle">
+                    追加标签
+                </div>
+            </li>
+            <li class="aui-list-item" onclick="updateTag()">
+                <div class="aui-list-item-label-icon">
+                    <i class="fa fa-plus-square-o aui-text-warning"></i>
+                </div>
+                <div class="aui-list-item-inner aui-list-item-middle">
+                   修改标签
+                </div>
+            </li>
+        </ul>
+    </div>
+    </div>
+
+
+    <div  class="aui-popup aui-popup-top-right " style="margin-top:2.45rem;z-index: 2010 !important;"  id="meeting-top-right" >
+    <div class="aui-popup-arrow"></div>
+    <div class="aui-popup-content">
+        <ul class="aui-list aui-list-noborder">
+            <li class="aui-list-item" onclick="createMeeting()">
+                <div class="aui-list-item-label-icon">
+                    <i class="fa fa-plus-square-o aui-text-primary"></i>
+                </div>
+                <div class="aui-list-item-inner aui-list-item-middle">
+                    创建会议
+                </div>
+            </li>
+        </ul>
+    </div>
+    </div>
+
+  </body>
+  <script type="text/javascript" src="script/api.js" ></script>
+  <script type="text/javascript" src="css/amazeui/js/jquery.min.js"></script>
+  <script type='text/javascript' src='script/common.js'></script>
+  <script type='text/javascript' src='script/queryapi.js'></script>
+  <script type='text/javascript' src='script/template.js'></script>
+  <script type="text/javascript" src="script/imageapi.js"></script>
+  <script type="text/javascript" src="script/aui-tab.js"></script>
+  <script type="text/javascript" src="script/aui-pull-refresh.js"></script>
+  <script type="text/javascript" src="script/aui-dialog.js" ></script>
+  <script type='text/javascript' src='script/controls.js'></script>
+  <script type="text/javascript" src="script/aui-scroll.js" ></script>
+  <script type="text/javascript" src="script/aui-popup.js" ></script>
+  <script type="text/javascript" src="script/bluebird.min.js" ></script>
+  <script type="text/javascript">
+var moduleBadgeCnt = {};
+  var popup;
+    var tabIndex = 1;
+    var tab1loaded = true;
+   var tab2loaded = false;
+   var tab3loaded=false;
+   var contacts;
+   var tab;
+var rong;
+   var isLoadRedPoint=true;
+   var chatUserInfoMap = {};
+
+   var pageComp = new ContactPageComponent(0,10,loadPhoneContactList);
+
+      apiready = function(){
+        api.parseTapmode();
+
+        var header = $api.byId('aui-header');
+        $api.fixStatusBar(header);
+
+        var height = $("#header").height();
+        $('body').css('padding-top', height+1);
+
+        createTab();
+
+        popup = new auiPopup();
+        $("#top-right").css("display","none");
+        $("#meeting-top-right").css("display","none");
+
+
+        initPull();
+        initPullBottom();
+        loadContactData();
+        contacts = api.require('contacts');
+
+        rong = api.require('rongCloud2');
+
+        setTimeout(loadConversations,1000);
+        //loadConversations();
+        //loadContactRedItems();
+      };
+
+
+
+      function clearUnread(targetId){
+        rong.clearMessagesUnreadStatus({
+            conversationType: 'DISCUSSION',
+            targetId: targetId
+        }, function(ret, err) {
+            //api.toast({ msg: ret.status });
+        });
+      }
+
+      function loadConversations(){
+        if(!rong)
+          return;
+        rong.getConversationList(function(ret, err) {
+            //api.toast({ msg: JSON.stringify(ret.result) });
+            loadConversationList(ret);
+        });
+      }
+
+      function preProcConversations(datalist,callback){
+        var ps = [];
+        var conversationMap={};
+        for(var i=0;i<datalist.length;++i){
+          var item = datalist[i];
+          item["receivedTime"] = new Date(item["receivedTime"]).Format("MM-dd hh:mm");
+          conversationMap[item.targetId]=item;
+          var p = new Promise(function(resolve, reject) {
+                rong.getDiscussion({
+                  discussionId: item.targetId
+              }, function(ret, err) {
+                  if (ret.status == 'success'){
+                        var creatorId = ret.result["creatorId"];
+                        ret.result["memberIdList"].moveToFirst(creatorId);
+                         resolve(ret.result);
+                  }
+              });
+          });
+          ps.push(p);
+        }
+
+        Promise.all(ps).then(function(values){
+            getDiscussPics(values,conversationMap,callback);
+        });
+
+      }
+
+
+
+      function getDiscussPics(discussInfos,conversationMap,callback){
+        var ids = discussInfos.selectMany("memberIdList").distinct();
+        var params = {"Ids":"'"+ids.join("','")+"'"};
+
+        AjaxApi.query("query_1021",params,function(data){
+          var datalist = data.list;
+          if(datalist){
+            for(var i=0;i<datalist.length;++i){
+               var item = datalist[i];
+               if(item[1] && item[1]!=null && item[1]!=""){
+                 item[3] = ImageApi.getGlobleImageUrl(item[0],item[1]);
+               }else{
+                 item[3] = "";
+               }
+
+               chatUserInfoMap[item[0]] = item;
+            }
+          }
+
+          var defaultImage = "image/user.jpg";
+          for(var i=0;i<discussInfos.length;++i){
+             var discussInfo = discussInfos[i];
+             var urls = [];
+             for(var j=0;j<discussInfo.memberIdList.length;++j){
+                var userid = discussInfo.memberIdList[j];
+                var chatUserInfo = chatUserInfoMap[userid];
+                if(chatUserInfo && chatUserInfo[3] && chatUserInfo[3]!=""){
+                  urls.push(chatUserInfo[3]);
+                }else{
+                  urls.push(defaultImage);
+                }
+             }
+             var conversationInfo = conversationMap[discussInfo.id];
+             if(conversationInfo){
+               if(urls.length>=4){
+                 conversationInfo["userImages"] = urls.slice(0,4);
+               }else {
+                 if(urls.length<4){
+                    padd = 4 - urls.length;
+                    for(var k=0;k<padd;++k){
+                       urls.push("image/nothing.jpg");
+                    }
+                 }
+                 conversationInfo["userImages"] = urls;
+               }
+             }
+          }
+
+          //alert(JSON.stringify(conversationMap));
+
+          callback();
+        });
+      }
+
+      function loadConversationList(ret){
+        if (ret.status == 'success') {
+          if(ret.result){
+            var datalist = ret.result;
+            if(datalist.length>0){
+              preProcConversations(datalist,function(){
+                var tplData = {
+                  "list" :datalist
+                };
+                var html = template("meetingListTpl", tplData);
+
+                $("#meetingListContent").html(html);
+              });
+            }
+          }else{
+            $("#meetingListContent").html(gWhitespaceHtml);
+          }
+        }
+      }
+
+      function createMeeting(){
+        popup.hide($("#"+toprightElem)[0]);
+        api.openWin({
+                     name: "app_selectusers",
+                     url: "selectusers.html",
+                     pageParam: {
+                         isFrame: false,
+                         srcWinName:"root",
+                         srcFrameName:"index.contact",
+                         selectedUsers: "[]",
+                         tags:"[]"
+                     },
+                     bgColor: '#FFFFFF',
+                     slidBackEnabled: false,
+                     vScrollBarEnabled:false,
+                     hScrollBarEnabled:false,
+                     delay: 0
+                 }
+         );
+      }
+
+      function setSelectUsers(data,tagstr){
+          var selectedUsers = JSON.parse(data);
+          if(selectedUsers.length==0)
+              return ;
+
+          var userNames = selectedUsers.select(1).join(",");
+          var userIds = selectedUsers.select(0);
+          rong.createDiscussion({
+              name: userNames,//+"$------$"+data,
+              userIdList:userIds
+            }, function(ret, err) {
+              if (ret.status == 'success'){
+                //api.toast({ msg: ret.result.discussionId });
+                setTimeout(loadConversations,1000);
+                //openchat
+              }else{}
+                //  api.toast({ msg: err.code });
+            });
+      }
+
+      function openChat(conversationId,conversationName){
+        $("#badge_"+conversationId).css("display","none");
+        clearUnread(conversationId);
+        api.openWin({
+                     name: "chat_win",
+                     url: "html/chat_win.html",
+                     pageParam: {
+                         isFrame: false,
+                         srcWinName:"root",
+                         srcFrameName:"index.contact",
+                         conversationId:conversationId,
+                         conversatioinName: conversationName,
+                         chatUserInfoMap:JSON.stringify(chatUserInfoMap)
+                     },
+                     bgColor: '#FFFFFF',
+                     slidBackEnabled: false,
+                     vScrollBarEnabled:false,
+                     hScrollBarEnabled:false,
+                     delay: 0
+                 }
+         );
+      }
+      ///////////////////////////////////////////////////////////////////////////////////////////////////////metting
+
+      function createTab(){
+         tab = new auiTab({
+          element:document.getElementById("tab"),
+        },function(ret){
+          switchTab(ret["index"]);
+      });
+      }
+
+      function switchTab(idx){
+        tabIndex = idx;
+        if(tabIndex == 1){
+          if(!tab1loaded) loadMeetingList();
+          tab1loaded = true;
+          hideTabContents();
+        $("#meetingListContent").css("display","block");
+        }else if(tabIndex==2){
+          if(!tab2loaded) loadProjContactList();
+          tab2loaded=true;
+          hideTabContents();
+          $("#projContactListContent").css("display","block");
+        }else if(tabIndex==3){
+          if(!tab3loaded) pageComp.load();
+          tab3loaded=true;
+          hideTabContents();
+          $("#phoneContactListContent").css("display","block");
+        }
+
+        removeRedPoint(idx);
+      }
+
+      //index的通知来调用的
+      function switchContactTab(idx){
+         tabIndex = idx;
+          tab1loaded = false;
+         tab2loaded = false;
+         tab3loaded=false;
+         tab.setActive(tabIndex);
+         switchTab(tabIndex);
+      }
+
+      function removeRedPoint(idx){
+        // var itemName = "";
+        // if(idx == 2) itemName="ProjectUser";
+        //
+        // if(moduleBadgeCnt[itemName] && moduleBadgeCnt[itemName]>0){
+        //   var params = {"ModuleGroup":"Contact","Module":itemName,
+        //     "UserId":TServerInfo.getUserId(),"ProjectId":"__globe__"};
+        //
+        //   AjaxApi.exec("query_9003",params,function(data){
+        //       $("#badge_"+itemName).css("display","none");
+        //       moduleBadgeCnt[itemName]=0;
+        //   });
+        // }
+      }
+
+      function loadContactRedItems(){
+        if(!isLoadRedPoint)
+          return ;
+          isLoadRedPoint = false;
+          setTimeout(function(){isLoadRedPoint = true;}, 10000 );
+
+        if(TServerInfo.getUserId() && TServerInfo.getUserId()!=""
+              && TServerInfo.getProjectId() && TServerInfo.getProjectId()!=""){
+
+          var params = {"ModuleGroup":"Contact",
+                  "UserId":TServerInfo.getUserId(),"ProjectId":"__globe__"};
+
+          AjaxApi.query("query_1011",params,function(data){
+            var datalist = data.list;
+            if(datalist){
+              for(var i=0;i<datalist.length;++i){
+                 var item = datalist[i];
+                 if(item[0] && item[3] && item[3]>0){
+                   var el = $("#badge_"+item[0]);
+                   el.css("display","block");
+                   el.html(item[3]);
+
+                   moduleBadgeCnt[item[0]]=item[3];
+                 }
+              }
+
+            }
+          });
+        }
+      }
+
+      function swithModuleGroup(){
+          setProjectInfo($api.getStorage("projectId"),$api.getStorage("projectName"));
+
+          loadContactRedItems();
+      }
+
+      function hideTabContents(){
+        $("*[name='contactTabContent']").each(function(){
+          $(this).css("display","none");
+        });
+      }
+
+      function initPull(){
+        var pullRefresh = new auiPullToRefresh({
+          container: document.querySelector('.aui-refresh-content'),
+          triggerDistance: 100
+      },function(ret){
+          if(ret.status=="success"){
+            loadContactData();
+            setTimeout(function(){
+              pullRefresh.cancelLoading(); //刷新成功后调用此方法隐藏
+            },1500);
+          }
+      })
+      }
+
+      function initPullBottom(){
+        var scroll = new auiScroll({
+                listen:true,
+                distance:5 //判断到达底部的距离，isToBottom为true
+            },function(ret){
+                if(ret.isToBottom){
+                  pageComp.loadMore();
+                }else{
+                }
+
+            });
+
+      }
+
+      function loadContactData(){
+        if(tabIndex==1){
+          loadConversations();
+        }else if(tabIndex==2){
+          loadProjContactList();
+        }else if(tabIndex==3){
+          pageComp.load();
+        }
+      }
+
+
+      function loadMeetingList(){
+
+      }
+
+      function preContactPhone(datalist)
+      {
+          for (var i = 0; i < datalist.length; i++) {
+            var item = datalist[i];
+            if(item["phones"] && item["phones"].length>0){
+              var phonenum = [];
+              for(var j=0;j<item["phones"].length;++j){
+                 var phoneobj = item["phones"][j];
+                 for(var key in phoneobj){
+                   var phonestr = phoneobj[key];
+                   phonenum.push(phonestr.replace(/\s/g,""));
+                 }
+              }
+              item["phones"] = phonenum.join(",");
+            }else{
+              item["phones"]="";
+            }
+          }
+      }
+
+      function loadPhoneContactList(pagecomp){
+        if(!contacts) return ;
+
+        pagecomp.setLoadState(true);
+
+        contacts.queryByPage(pagecomp.getPageParam(), function(ret, err){
+          if(ret.total) pagecomp.setTotal(ret.total);
+
+          var datalist = ret.contacts;
+
+          preContactPhone(datalist);
+
+          if(datalist){
+            var tplData = {
+              "list" : datalist
+            };
+            var html = template("phoneContactListTpl", tplData);
+
+            if(pagecomp.getIsAppend()){
+              $("#phoneContactListContent").append(html);
+            }else{
+              $("#phoneContactListContent").html(html);
+            }
+          }
+          pagecomp.setLoadState(false);
+        });
+      }
+
+
+      function preUsermageUrl(datalist)
+      {
+        var imageIdx = 3;
+          for (var i = 0; i < datalist.length; i++) {
+            var item = datalist[i];
+            if(item[imageIdx] && item[imageIdx]!=""){
+              item[imageIdx] = ImageApi.getGlobleImageUrl(item[0],item[imageIdx]);
+            }else{
+              item[imageIdx]="image/user.jpg";
+            }
+          }
+      }
+
+      var sortStrCurr="asc";
+      var ksortStrAsc="asc"
+      var ksortStrDesc="desc"
+
+      function loadProjContactList(querystr,sortquery){
+        if(!checkSelectProject()){
+          return;
+        }
+
+        var queryObj = {"ProjectId":TServerInfo.getProjectId(),"UserId":TServerInfo.getUserId()};
+        if(querystr){
+            queryObj["UserName"] = querystr;
+        }
+
+        if(sortquery){
+          if(sortStrCurr == ksortStrAsc){
+             sortStrCurr = ksortStrDesc;
+          }else{
+             sortStrCurr = ksortStrAsc;
+          }
+        }
+
+        queryObj["SortStr"] = sortStrCurr;
+
+          AjaxApi.query("query_1009",queryObj,function(data){
+            var datalist = data.list;
+            if(datalist){
+              preUsermageUrl(datalist);
+              var tplData = {
+                "list" : datalist
+              };
+              var html = template("projContactListTpl", tplData);
+              $("#projContactListContent").html(html);
+
+            }else{
+              $("#projContactListContent").html(gWhitespaceHtml);
+            }
+          });
+      }
+
+      function selectProject(){
+        api.openWin({
+                      name: "app_selectproject",
+                      url: "selectproject.html",
+                      pageParam: {
+                          isFrame: false,
+                          srcWinName:"root",
+                          srcFrameName:"index.contact"
+                      },
+                      bgColor: '#FFFFFF',
+                      slidBackEnabled: false,
+                      vScrollBarEnabled:false,
+                      hScrollBarEnabled:false,
+                      delay: 0
+                  }
+          );
+      }
+
+      function setSelectProject(id,name,lon,lat){
+        setStorageProjectInfo(id,name,lon,lat);
+
+        setProjectInfo(id,name);
+      }
+
+      function setProjectInfo(id,name){
+        if(name=="") name="[选择项目]";
+        $("#worktitle").html(name);
+      }
+
+      function inviteUsers(userPhones){
+          if(!checkSelectProject())
+            return ;
+
+          var userPhoneArray = userPhones.split(",");
+
+          for(var i=0;i<userPhoneArray.length;++i){
+             var phone = userPhoneArray[i];
+             if(phone == TServerInfo.getUserId()){
+               api.toast({
+                 msg : '不能添加自己',
+                 duration : 2000,
+                 location : 'bottom'
+               });
+               return;
+             }
+          }
+
+          var userNames = JSON.stringify(userPhoneArray);
+
+          AjaxApi.rest("queryEntities","SysUser",{"UserName":userNames},function(data){
+              if(data && data.length>0){
+                var userobj = data[0];
+                sendJoinProjectReq(userobj);
+              }else{
+                api.toast({
+                  msg : '用户不存在',
+                  duration : 2000,
+                  location : 'bottom'
+                });
+              }
+            });
+      }
+
+      function sendJoinProjectReq(userobj){
+         var queryparam = {"ProjectId":TServerInfo.getProjectId(),"JoinUserId":userobj.Id,
+             "ProjectUserId":TServerInfo.getUserId(),"ReqKind":"1","Result":"0"};
+
+        AjaxApi.rest("queryEntities","ProjectJoinRequest",queryparam,function(data){
+            if(data && data.length>0){
+              api.toast({
+                msg : '已邀请该用户',
+                duration : 2000,
+                location : 'bottom'
+              });
+            }else{
+              var guid = GetUuid();
+              AjaxApi.rest("createEntity","ProjectJoinRequest",{"Id":guid,"ProjectId":TServerInfo.getProjectId(),"JoinUserId":userobj.Id,
+              "ProjectUserId":TServerInfo.getUserId(),"Msg":"","ReqKind":1},function(data){
+                api.toast({
+                  msg : '已发送',
+                  duration : 2000,
+                  location : 'bottom'
+                });
+              },{"noTips":true});
+            }
+          });
+      }
+
+      var toprightElem;
+      function openMenu(){
+        if(tabIndex==1){
+           toprightElem = "meeting-top-right";
+        }else if(tabIndex==2){
+           toprightElem = "top-right";
+        }
+         popup.show($("#"+toprightElem)[0]);
+      }
+
+    function addTag(){
+      popup.hide($("#"+toprightElem)[0]);
+
+      var userIds = [];
+      $("*[name='userCheck']").each(function(){
+          if($(this).prop('checked')){
+            var userId = $(this).attr("userId");
+            userIds.push(userId);
+          }
+        });
+
+      if(userIds.length==0){
+        api.toast({
+            msg : "至少选择一个成员!",
+            duration : 1000,
+            location : 'bottom'
+          });
+          return ;
+      }
+
+      api.openWin({
+                    name: "app_usertag",
+                    url: "usertag.html",
+                    pageParam: {
+                        isFrame: false,
+                        selectedUsers:userIds,
+                        isupdate:false
+                    },
+                    bgColor: '#FFFFFF',
+                    slidBackEnabled: false,
+                    vScrollBarEnabled:false,
+                    hScrollBarEnabled:false,
+                    delay: 0
+                }
+        );
+    }
+
+    function updateTag(){
+      popup.hide($("#top-right")[0]);
+
+      var userIds = [];
+      $("*[name='userCheck']").each(function(){
+          if($(this).prop('checked')){
+            var userId = $(this).attr("userId");
+            userIds.push(userId);
+          }
+        });
+
+      if(userIds.length==0){
+        api.toast({
+            msg : "至少选择一个成员!",
+            duration : 1000,
+            location : 'bottom'
+          });
+          return ;
+      }
+
+      api.openWin({
+                    name: "app_usertag",
+                    url: "usertag.html",
+                    pageParam: {
+                        isFrame: false,
+                        selectedUsers:userIds,
+                        isupdate:true
+                    },
+                    bgColor: '#FFFFFF',
+                    slidBackEnabled: false,
+                    vScrollBarEnabled:false,
+                    hScrollBarEnabled:false,
+                    delay: 0
+                }
+        );
+    }
+
+
+
+    // var searchBar = document.querySelector(".aui-searchbar-input");
+    // if(searchBar){
+    //     searchBar.onclick = function(){
+    //         document.querySelector(".aui-searchbar-cancel").style.marginRight = 0;
+    //     }
+    // }
+    // document.querySelector(".aui-searchbar-cancel").onclick = function(){
+    //     this.style.marginRight = "-"+this.offsetWidth+"px";
+    //     document.getElementById("search-input").value = '';
+    //     document.getElementById("search-input").blur();
+    // }
+    //
+    // function doSearch(){
+    //     var searchValue = document.getElementById("search-input").value;
+    //     if(searchValue){
+    //         alert("您输入的内容是1:"+searchValue);
+    //     }
+    // }
+
+    function search(){
+      var searchValue = document.getElementById("search-input").value;
+      if(searchValue){
+          alert("您输入的内容是2:"+searchValue);
+      }
+    }
+
+    function clearLastProjectData(){
+      //$("#meetingListContent").html(gWhitespaceHtml);
+      $("#projContactListContent").html(gWhitespaceHtml);
+
+       tab1loaded = false;
+      tab2loaded = false;
+    }
+
+    function clearUserData(){
+      $("#meetingListContent").html(gWhitespaceHtml);
+      $("#projContactListContent").html(gWhitespaceHtml);
+      $("#phoneContactListContent").html(gWhitespaceHtml);
+
+      tab1loaded = false;
+     tab2loaded = false;
+     tab3loaded=false;
+    }
+  </script>
+  </html>

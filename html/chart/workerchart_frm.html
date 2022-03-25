@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <title>title</title>
+		<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/font-awesome/css/font-awesome.min.css" />
+		<style type="text/css">
+		.am-with-fixed-tab {
+			padding-top: 5.7em;
+		}
+		</style>
+</head>
+<body class="am-with-fixed-tab">
+<div id="header" class="am-header-fixed">
+		<ul class="aui-list aui-form-list">
+			<li class="aui-list-item">
+					<div class="aui-list-item-inner">
+							<div class="aui-list-item-label">
+									开始日期
+							</div>
+							<div class="aui-list-item-input">
+										<input id="StartDate" placeholder="" type="text" readonly>
+							</div>
+							<div class="aui-pull-right  " style="width:40px !important">
+									<a onclick="datepick('StartDate')"  style="width:100%"> &gt;&gt;&nbsp;</a>
+							</div>
+
+					</div>
+			</li>
+		<li class="aui-list-item">
+				<div class="aui-list-item-inner">
+						<div class="aui-list-item-label">
+								截止日期
+						</div>
+						<div class="aui-list-item-input">
+									<input id="EndDate" placeholder="" type="text" readonly>
+						</div>
+						<div class="aui-pull-right  " style="width:40px !important">
+								<a onclick="datepick('EndDate')"  style="width:100%"> &gt;&gt;&nbsp;</a>
+						</div>
+
+				</div>
+		</li>
+		</ul>
+</div>
+	<section class="aui-refresh-content">
+<ul id="workerContent" class="aui-list  aui-media-list" style="background-color:#f5f5f5">
+
+</ul>
+</section>
+
+	<script id="workerTpl" type="text/html">
+
+			{{each list}}
+			<li class="aui-list-item aui-list-item-middle " style="background-color:#ffffff;" onclick="viewWorkers('{{$value[0]}}')">
+				<div class="aui-row aui-list-item-text aui-font-size-14 aui-padded-t-5 aui-padded-b-0 aui-padded-r-15" >
+					<div class="aui-col-xs-6 aui-text-left">{{$value[0]}}</div>
+					<div class="aui-col-xs-6 aui-text-right">{{$value[1]}}工日</div>
+				</div>
+			</li>
+
+			{{/each}}
+	</script>
+
+</body>
+<script type="text/javascript" src="../../script/api.js" ></script>
+<script type="text/javascript" src="../../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../../script/common.js'></script>
+<script type='text/javascript' src='../../script/queryapi.js'></script>
+<script type='text/javascript' src='../../script/template.js'></script>
+<script type="text/javascript" src="../../script/aui-pull-refresh.js"></script>
+<script type="text/javascript" src="../../script/aui-scroll.js" ></script>
+<script type='text/javascript' src='../../script/controls.js'></script>
+<script type="text/javascript" src="../../script/aui-tab.js"></script>
+<script type="text/javascript">
+
+var pageCompExec = new PageComponent(0,10,loadExecWorkers);
+	apiready = function(){
+
+		var now =new Date();
+		$("#EndDate").val(now.Format("yyyy-MM-dd"));
+		now.PrevMonth();
+		$("#StartDate").val(now.Format("yyyy-MM-dd"));
+
+		pageCompExec.load();
+
+	  initPull();
+	  initPullBottom();
+	}
+
+	function initPull(){
+	  var pullRefresh = new auiPullToRefresh({
+	    container: document.querySelector('.aui-refresh-content'),
+	    triggerDistance: 100
+	},function(ret){
+	    if(ret.status=="success"){
+	       pageCompExec.load();
+	      setTimeout(function(){
+	        pullRefresh.cancelLoading(); //刷新成功后调用此方法隐藏
+	      },1500);
+	    }
+	})
+	}
+
+	function initPullBottom(){
+	  var scroll = new auiScroll({
+	          listen:true,
+	          distance:5 //判断到达底部的距离，isToBottom为true
+	      },function(ret){
+	          if(ret.isToBottom){
+	          pageCompExec.loadMore();
+	            //alert("已到达底部");
+	              //document.getElementById("demo").textContent = "已到达底部";
+	          }else{
+	              //document.getElementById("demo").textContent = "滚动高度："+ret.scrollTop;
+
+	          }
+
+	      });
+
+	}
+
+	function loadExecWorkers(pagecomp){
+	  pagecomp.setLoadState(true);
+		var startDate = $("#StartDate").val();
+		var endDate = $("#EndDate").val();
+		var dStartDate = new Date(Date.parse(startDate));
+		var dEndDate = new Date(Date.parse(endDate));
+		dStartDate.TrimDate();
+		dEndDate.TrimDate();
+
+	  var param = $.extend(pagecomp.getPageParam(),TServerInfo.getProjUserParam(),{"StartDate":dStartDate.getTime()/1000+"","EndDate":dEndDate.getTime()/1000+""});
+	  AjaxApi.query("query_3301",param,function(data){
+	    if(data.total) pagecomp.setTotal(data.total);
+
+	    var datalist = data.list;
+	    if(datalist){
+	      var tplData = {
+	        "list" : datalist
+	      };
+	      var html = template("workerTpl", tplData);
+
+	      if(pagecomp.getIsAppend()){
+	        $("#workerContent").append(html);
+	      }else{
+	        $("#workerContent").html(html);
+	      }
+	    }
+	    pagecomp.setLoadState(false);
+	  });
+	}
+
+	function datepick(nodeid){
+		api.openPicker({
+				type: 'date',
+				date: $("#"+nodeid).val(),
+				title: '选择日期'
+		}, function(ret, err) {
+				if (ret) {
+					var monthstr = ret.month+"";
+					var daystr = ret.day+"";
+						$("#"+nodeid).val(ret.year+"-"+monthstr.PadLeft(2,0)+"-"+daystr.PadLeft(2,0));
+				}
+
+				pageCompExec.load();
+		});
+	}
+
+function viewWorkers(kind){
+	var startDate =$("#StartDate").val();
+	var endDate = $("#EndDate").val();
+
+	api.openWin({
+								name: "workerdetailchart_win",
+								url: "workerdetailchart_win.html",
+								pageParam:{"Kind":kind, "StartDate":startDate,"EndDate":endDate},
+								bgColor: '#FFFFFF',
+								slidBackEnabled: false,
+								vScrollBarEnabled:false,
+								hScrollBarEnabled:false,
+								delay: 0
+						}
+		);
+}
+</script>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <title>title</title>
+		<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/font-awesome/css/font-awesome.min.css" />
+		<style type="text/css">
+
+		</style>
+</head>
+<body >
+	<section class="aui-refresh-content">
+<ul id="workerContent" class="aui-list  aui-media-list" style="background-color:#f5f5f5">
+
+</ul>
+</section>
+
+	<script id="workerTpl" type="text/html">
+
+			{{each list}}
+			<li class="aui-list-item aui-list-item-middle " style="background-color:#ffffff;" >
+				<div class="aui-row aui-list-item-text aui-font-size-14 aui-padded-t-5 aui-padded-b-0 aui-padded-r-15" >
+					<div class="aui-col-xs-6 aui-text-left">{{$value[0]}}</div>
+					<div class="aui-col-xs-6 aui-text-right">{{$value[1]}}工日</div>
+				</div>
+			</li>
+
+			{{/each}}
+	</script>
+
+</body>
+<script type="text/javascript" src="../../script/api.js" ></script>
+<script type="text/javascript" src="../../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../../script/common.js'></script>
+<script type='text/javascript' src='../../script/queryapi.js'></script>
+<script type='text/javascript' src='../../script/template.js'></script>
+<script type="text/javascript" src="../../script/aui-pull-refresh.js"></script>
+<script type="text/javascript" src="../../script/aui-scroll.js" ></script>
+<script type='text/javascript' src='../../script/controls.js'></script>
+<script type="text/javascript" src="../../script/aui-tab.js"></script>
+<script type="text/javascript">
+
+var pageCompExec = new PageComponent(0,10,loadExecWorkers);
+	apiready = function(){
+
+		pageCompExec.load();
+
+	  initPull();
+	  initPullBottom();
+	}
+
+	function initPull(){
+	  var pullRefresh = new auiPullToRefresh({
+	    container: document.querySelector('.aui-refresh-content'),
+	    triggerDistance: 100
+	},function(ret){
+	    if(ret.status=="success"){
+	       pageCompExec.load();
+	      setTimeout(function(){
+	        pullRefresh.cancelLoading(); //刷新成功后调用此方法隐藏
+	      },1500);
+	    }
+	})
+	}
+
+	function initPullBottom(){
+	  var scroll = new auiScroll({
+	          listen:true,
+	          distance:5 //判断到达底部的距离，isToBottom为true
+	      },function(ret){
+	          if(ret.isToBottom){
+	          pageCompExec.loadMore();
+	            //alert("已到达底部");
+	              //document.getElementById("demo").textContent = "已到达底部";
+	          }else{
+	              //document.getElementById("demo").textContent = "滚动高度："+ret.scrollTop;
+
+	          }
+
+	      });
+
+	}
+
+	function loadExecWorkers(pagecomp){
+	  pagecomp.setLoadState(true);
+
+		var dStartDate = new Date(Date.parse(api.pageParam.StartDate));
+		var dEndDate = new Date(Date.parse(api.pageParam.EndDate));
+		dStartDate.TrimDate();
+		dEndDate.TrimDate();
+
+	  var param = $.extend(pagecomp.getPageParam(),TServerInfo.getProjUserParam(),{"Kind":api.pageParam.Kind,"StartDate":dStartDate.getTime()/1000+"","EndDate":dEndDate.getTime()/1000+""});
+	  AjaxApi.query("query_3302",param,function(data){
+	    if(data.total) pagecomp.setTotal(data.total);
+
+	    var datalist = data.list;
+	    if(datalist){
+	      var tplData = {
+	        "list" : datalist
+	      };
+	      var html = template("workerTpl", tplData);
+
+	      if(pagecomp.getIsAppend()){
+	        $("#workerContent").append(html);
+	      }else{
+	        $("#workerContent").html(html);
+	      }
+	    }
+	    pagecomp.setLoadState(false);
+	  });
+	}
+
+
+</script>
+</html>

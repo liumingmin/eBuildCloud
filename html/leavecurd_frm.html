@@ -1,0 +1,548 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../css/font-awesome/css/font-awesome.min.css" />
+    <style type="text/css">
+    .aui-list .aui-list-item-media {
+        width: 3rem;
+    }
+    .notes-add {
+        position: fixed;
+        left: 0.5rem;
+        bottom: 0.5rem;
+        width: 3rem;
+        z-index: 99;
+    }
+    textarea {
+        height: 8rem;
+        background-color: #ffffff;
+        padding: 0.5rem;
+    }
+    .photos img {
+        display: block;
+        width: 100%;
+    }
+    .add-photos > div {
+        width: 100%;
+        height:5.15rem;
+        line-height: 5.15rem;
+    }
+    .add-photos > div .aui-iconfont {
+        font-size: 2rem;
+        color: #ccc;
+    }
+    .image-item {
+        position: relative;
+        height: 5.3rem;
+        overflow: hidden;
+        background-color: #f0f0f0;
+    }
+    .image-item img {
+        display: block;
+        margin: 0 auto;
+        width: auto;
+        height: 100%;
+    }
+    .image-item .delete-btn {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 28px;
+        height: 28px;
+        background-color: rgba(0,0,0,0.7);
+        margin-left: -14px;
+        margin-top: -14px;
+        color: #ffffff;
+        text-align: center;
+        border-radius: 50%;
+    }
+    </style>
+</head>
+<body>
+
+  <section class="aui-content-padded">
+  <ul class="aui-list aui-form-list">
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                请假类型
+            </div>
+            <div class="aui-list-item-input">
+              <div class="aui-list-item-input">
+                <select id="Kind">
+                    <option value=0>事假</option>
+                    <option value=1>年假</option>
+                    <option value=2>病假</option>
+                </select>
+            </div>
+            </div>
+
+        </div>
+    </li>
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                开始时间
+            </div>
+            <div class="aui-list-item-input">
+                  <input id="StartTime" placeholder="" type="text" readonly>
+            </div>
+            <div class="aui-pull-right  " style="width:40px !important">
+                <a onclick="datepick('StartTime')"  style="width:100%"> &gt;&gt;&nbsp;</a>
+            </div>
+
+        </div>
+    </li>
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                结束时间
+            </div>
+            <div class="aui-list-item-input">
+                  <input id="EndTime" placeholder="" type="text" readonly>
+            </div>
+            <div class="aui-pull-right  " style="width:40px !important">
+                <a onclick="datepick('EndTime')"  style="width:100%"> &gt;&gt;&nbsp;</a>
+            </div>
+
+        </div>
+    </li>
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                抄送人
+            </div>
+
+            <div class="aui-list-item-input">
+                  <input  id="UserNames" placeholder="" type="text" readonly>
+            </div>
+            <div class="aui-pull-right  " style="width:40px !important">
+                <a onclick="selectUsers('UserNames')"  style="width:100%"> &gt;&gt;&nbsp;</a>
+            </div>
+        </div>
+    </li>
+  </ul>
+  </section>
+  <section class="aui-content-padded">
+      <textarea id="Reseaon" style="height:8em;overflow-y:scroll;background-color:#ffffff;" placeholder="请假事由"></textarea>
+  </section>
+
+  <p class="aui-margin-l-15 aui-margin-t-15">附件图片(长按可删除图片) </p>
+  <section class="aui-content-padded">
+    <div id="imageLists"  class="aui-row aui-row-padded">
+        <div id="txtImage" class="aui-col-xs-4 add-photos" onclick="ImageApi.fastSelectImage({},'txtImage',true);">
+            <div class="aui-border aui-text-center">
+                <i class="aui-iconfont aui-icon-plus"></i>
+            </div>
+        </div>
+    </div>
+  </section>
+
+  <script id="noticeImageTpl" type="text/html">
+
+      {{each list}}
+
+      <div class="aui-col-xs-4 image-item">
+        <img id="{{$value[2]}}" flag="1" src="{{$value[1]}}" class="notes-image" >
+      </div>
+
+      {{/each}}
+  </script>
+
+<p class="aui-margin-l-15 aui-margin-t-15">审批流程 </p>
+  <section id="processNodeContent" class="aui-content-padded">
+
+    </section>
+
+    <script id="processNodeTpl" type="text/html">
+
+      <div style="width:50px;display:inline-block;vertical-align: top;color:#03a9f4" class="aui-text-center">
+        <span class="fa-stack fa-lg " style="">
+          <i class="fa fa-square-o fa-stack-2x"></i>
+          <i class="fa fa-flag  fa-stack-1x"></i>
+        </span>
+
+        <div class="aui-text-center aui-font-size-12" >开始</div>
+      </div>
+
+        {{each list}}
+          <div style="width:30px;display:inline-block;vertical-align: top;"  class="aui-text-center">
+            <i class="fa fa-arrow-right fa-2x " style="-webkit-transform:scale(1,0.5); color:#969696"></i>
+          </div>
+
+          <div style="width:50px;display:inline-block;vertical-align: top;color:#969696" class="aui-text-center">
+
+            <span class="fa-stack fa-lg " style="">
+              <i class="fa fa-square-o fa-stack-2x"></i>
+              <i class="fa   fa-stack-1x"></i>
+            </span>
+
+            <div class="aui-text-center aui-font-size-12" >{{$value[5]}}</div>
+          </div>
+        {{/each}}
+    </script>
+
+    <script id="instanceNodeTpl" type="text/html">
+
+      <div style="width:50px;display:inline-block;vertical-align: top;color:green" class="aui-text-center">
+        <span class="fa-stack fa-lg " style="">
+          <i class="fa fa-square-o fa-stack-2x"></i>
+          <i class="fa fa-check  fa-stack-1x"></i>
+        </span>
+
+        <div class="aui-text-center aui-font-size-12" >开始</div>
+      </div>
+
+        {{each list}}
+          <div style="width:30px;display:inline-block;vertical-align: top;"  class="aui-text-center">
+            <i class="fa fa-arrow-right fa-2x " style="-webkit-transform:scale(1,0.5);  {{if $value[6] ==1 || $value[7] ==1}} color:green {{else}} color:#969696 {{/if}} "></i>
+          </div>
+
+          <div style="width:50px;display:inline-block;vertical-align: top;{{if $value[7] ==1}} color:#03a9f4 {{else if $value[6] ==1}}color:green {{else}} color:#969696{{/if}} "
+          class="aui-text-center"
+               >
+
+            <span class="fa-stack fa-lg " >
+              <i class="fa fa-square-o fa-stack-2x"></i>
+              <i class="fa {{if $value[7] ==1}} fa-flag {{else if $value[6] ==1}} fa-check {{/if}}  fa-stack-1x"></i>
+            </span>
+
+            <div class="aui-text-center aui-font-size-12" >{{$value[4]}}</div>
+          </div>
+        {{/each}}
+    </script>
+</body>
+
+<script type='text/javascript' src='../script/api.js'></script>
+<script type="text/javascript" src="../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../script/common.js'></script>
+<script type='text/javascript' src='../script/queryapi.js'></script>
+<script type='text/javascript' src='../script/template.js'></script>
+<script type="text/javascript" src="../script/hammer.min.js"></script>
+<script type="text/javascript" src="../script/imageapi.js"></script>
+<script type="text/javascript" src="../script/aui-toast.js" ></script>
+<script type="text/javascript" src="../script/bluebird.min.js" ></script>
+
+<script type='text/javascript'>
+var toast = new auiToast();
+
+var priority=0;
+var processCode="leave";
+var processId="";
+var deleteImageIds=[];
+
+var orginLeaveUserIds=[];
+var processUserIds=[];
+apiready = function(){
+
+      if(api.pageParam.leaveId && api.pageParam.leaveId!=""){
+          loadEntity(api.pageParam.leaveId);
+          loadImages(api.pageParam.leaveId);
+          loadUserLink(api.pageParam.leaveId);
+          renderInstanceNodes("query_1143",api.pageParam.leaveId);
+      }else {
+        var params = $.extend({"Code":processCode},TServerInfo.getProjUserParam());
+        AjaxApi.query("query_1015",params,function(data){
+          var datalist = data.list;
+          if(datalist&& datalist.length>0){
+              processId = datalist[0][0];
+          }
+
+          if(processId == ""){
+            showMsg("您没有发起流程权限!");
+            setTimeout(function(){api.closeWin();},1000);
+            return;
+          }else{
+            renderProcessNodes(processId,function(datalist){
+                processUserIds = populateNodeUserIds(datalist);
+            });
+          }
+        });
+
+
+      }
+}
+
+function loadEntity(id){
+  AjaxApi.rest("retrievEntity","OaAppLeave",id,function(data){
+        $("#Kind").val(data.Kind);
+        $("#Reseaon").val(data.Reseaon);
+        $("#StartTime").val(data.StartTime.sliceWith(gMinuteTimeSuffix));
+        $("#EndTime").val(data.EndTime.sliceWith(gMinuteTimeSuffix));
+    });
+}
+
+function preImageUrl(datalist)
+{
+  var picIndex = 1;
+    for (var i = 0; i < datalist.length; i++) {
+      var item = datalist[i];
+      if(item[picIndex] && item[picIndex]!=""){
+        item[picIndex] = ImageApi.getImageUrl(item[0],item[picIndex]);
+      }else{
+        item[picIndex]="image/project.jpg";
+      }
+    }
+}
+
+function loadImages(ownerId){
+  AjaxApi.query("query_1006",{"OwnerId":ownerId},function(data){
+      var datalist = data.list;
+      if(datalist&& datalist.length>0){
+        preImageUrl(datalist);
+        var tplData = {
+          "list" : datalist
+        };
+        var html = template("noticeImageTpl", tplData);
+        $("#txtImage").before(html);
+
+        for (var i = 0; i < datalist.length; i++) {
+            var item = datalist[i];
+            ImageApi.addImagePress(document.getElementById(item[2]));
+            deleteImageIds.push(item[2]);
+        }
+      }
+    });
+}
+
+function loadUserLink(ownerId){
+  var queryparam = {"LeaveId":ownerId};
+
+  AjaxApi.query("query_1145",queryparam,function(data){
+        var datalist = data.list;
+        if(datalist&& datalist.length>0){
+            currSelectUserNodeId="UserNames";
+            setSelectUsers(JSON.stringify(datalist),"[]");
+            orginLeaveUserIds = datalist.select(0);
+        }
+   });
+}
+
+function datepick(nodeid){
+  if(api.systemType=='android'){
+    api.openPicker({
+      type: 'date',
+      date: new Date().Format("yyyy-MM-dd"),
+      title: '选择日期'
+    },function(ret,err){
+        if (ret) {
+          var monthstr = ret.month+"";
+          var daystr = ret.day+"";
+          var yearstr = ret.year+"";
+          //选择时间
+          api.openPicker({
+              type: 'time',
+              title:'选择时间',
+              date: new Date().Format("yyyy-MM-dd hh:mm"),
+          },function(ret,err){
+              var hour = ret.hour+"";
+              var minute = ret.minute+"";
+              //选择的时间
+              var value2 = hour+':'+minute;
+
+              $("#"+nodeid).val(yearstr+"-"+monthstr.PadLeft(2,0)+"-"+daystr.PadLeft(2,0)+"T"
+              +hour.PadLeft(2,0)+":"+minute.PadLeft(2,0));
+          });
+        }
+    });
+  }else{
+    api.openPicker({
+        type: 'date_time',
+        date: new Date().Format("yyyy-MM-dd hh:mm"),
+        title: '选择日期'
+    }, function(ret, err) {
+        if (ret) {
+          var monthstr = ret.month+"";
+          var daystr = ret.day+"";
+          var hour = ret.hour+"";
+          var minute = ret.minute+"";
+          $("#"+nodeid).val(ret.year+"-"+monthstr.PadLeft(2,0)+"-"+daystr.PadLeft(2,0)+"T"
+          +hour.PadLeft(2,0)+":"+minute.PadLeft(2,0));
+        }
+    });
+  }
+}
+
+function showMsg(msg){
+  api.toast({
+      msg : msg,
+      duration : 1000,
+      location : 'bottom'
+    });
+}
+
+function enableClickOnceBtn(){
+  try{
+  api.execScript({
+    name: 'leavecurd_win',
+    script: 'enableClickOnceBtn()'
+   });
+  }catch(e){}
+}
+
+function commit(status)
+{
+
+  if($("#StartTime").val() == ""){
+    showMsg("开始日期必填!");
+    enableClickOnceBtn();
+    return ;
+  }
+
+  if($("#EndTime").val() == ""){
+    showMsg("结束日期必填!");
+    enableClickOnceBtn();
+    return ;
+  }
+
+  toast.loading({
+        title:"正在保存...",
+        duration:2000
+    },function(ret){
+
+    });
+
+    saveLeave(status);
+}
+
+var masterEntityOp = new EntityBatchOp("OaAppLeave","Kind,Reseaon,Status,StartTime,EndTime");
+var userLinkEntityOp = new EntityBatchOp("OaAppLeaveLink","","UserId");
+var attachmentEntityOp = CreateAttachEntBatchOp();
+
+function saveLeave(status){
+  //master
+  var isCreate = true;
+  var ownerId="";
+  if(api.pageParam.leaveId && api.pageParam.leaveId!=""){
+      ownerId = api.pageParam.leaveId;
+      isCreate = false;
+  }else{
+      ownerId = GetUuid();
+  }
+
+  var entObj = {"Id":ownerId,
+        "Kind":parseInt($("#Kind").val()),
+        "Reseaon":$("#Reseaon").val(),
+        "Status":status,
+        "ProjectId":TServerInfo.getProjectId(),
+        "CreateUserId":TServerInfo.getUserId(),
+        "StartTime":$("#StartTime").val()+gMinuteTimeSuffix,
+        "EndTime":$("#EndTime").val()+gMinuteTimeSuffix,
+        "ProcessId":processId
+      };
+   if(isCreate){
+     masterEntityOp.addEntity(entObj);
+   }else{
+      masterEntityOp.updateEntity(entObj);
+   }
+
+   //images
+   var imageInfos = [];
+   $("#imageLists").find("img").each(function(){
+     var flag = $(this).attr("flag");
+     if(!(flag && flag==1)){
+       var imageInfo = ImageApi.getImageInfo($(this).attr("id"),$(this).attr("src"),"");
+       imageInfo["OwnerId"] = ownerId;
+       imageInfos.push(imageInfo);
+     }else{
+       deleteImageIds.removeItem($(this).attr("id"));
+     }
+   });
+
+   attachmentEntityOp.deleteByFields(deleteImageIds);
+
+   //links
+   var userLinks = [];
+   var users = $("#UserNames").attr("users");
+   if(users){
+     var usersArray = JSON.parse(users);
+     if(usersArray.length>0){
+       for(var i=0;i<usersArray.length;++i){
+           var userId = usersArray[i][0];
+           userLinks.push({"Id":GetUuid(),"LeaveId":ownerId,"UserId":userId,"ProjectId":TServerInfo.getProjectId()});
+       }
+     }
+   }
+
+   var nowUserIds = userLinks.select("UserId");
+   var addUserLinks = userLinks.subtractBy("UserId",orginLeaveUserIds);
+   var deleteUserIds = orginLeaveUserIds.subtract(nowUserIds);
+
+   userLinkEntityOp.addEntities(addUserLinks);
+   userLinkEntityOp.deleteByFields(deleteUserIds);
+
+   AjaxApi.batchSave([masterEntityOp,userLinkEntityOp,attachmentEntityOp],imageInfos,
+     {"RelateModels":"OaAppLeaveNode","noTips":true},function(data){
+        saveSuccess();
+   });
+}
+
+
+
+function reloadParent(){
+  try{
+  api.execScript({
+    name: 'leavelist_win',
+    frameName: 'leavelist_frm',
+    script: 'loadData()'
+   });
+  }catch(e){}
+}
+
+function saveSuccess(){
+  api.toast({
+      msg : "提交成功!",
+      duration : 1000,
+      location : 'bottom'
+    });
+
+setTimeout(function(){reloadParent();api.closeWin();},1000);
+}
+
+var currSelectUserNodeId;
+function selectUsers(nodeid){
+   currSelectUserNodeId = nodeid;
+   var users = $("#"+nodeid).attr("users");
+   var tags = $("#"+nodeid).attr("tags");
+
+   api.openWin({
+                name: "app_selectusers",
+                url: "../selectusers.html",
+                pageParam: {
+                    isFrame: false,
+                    srcWinName:"leavecurd_win",
+                    srcFrameName:"leavecurd_frm",
+                    selectedUsers: (users?users:"[]"),
+                    tags:(tags?tags:"[]"),
+                    excludeIds:processUserIds
+                },
+                bgColor: '#FFFFFF',
+                slidBackEnabled: false,
+                vScrollBarEnabled:false,
+                hScrollBarEnabled:false,
+                delay: 0
+            }
+    );
+}
+
+function setSelectUsers(data,tagstr){
+    $("#"+currSelectUserNodeId).attr("users",data);
+    $("#"+currSelectUserNodeId).attr("tags",tagstr);
+
+    var selectedUsers = JSON.parse(data);
+
+    var selectUserStr = "";
+    for(var i=0;i<selectedUsers.length;++i){
+      selectUserStr+=selectedUsers[i][1]+",";
+    }
+
+    $("#"+currSelectUserNodeId).val(selectUserStr);
+}
+
+</script>
+</html>

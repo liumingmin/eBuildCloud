@@ -1,0 +1,322 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="css/font-awesome/css/font-awesome.min.css" />
+    <style type="text/css">
+        #classify {
+            color: #ffffff !important;
+        }
+    </style>
+</head>
+<body>
+  <header id="aui-header" class="aui-bar aui-bar-nav aui-bar-light">
+  <a class="aui-pull-left aui-btn">
+
+  </a>
+  <div  class="aui-title" > <span id="worktitle" onclick="selectProject()">[选择项目]</span>&nbsp;<i onclick="selectProject()" class="fa aui-text-success  fa-refresh"></i></div>
+  <a class="aui-pull-right aui-btn ">
+
+  </a>
+</header>
+
+    <div class="aui-padded-l-15 aui-font-size-14 aui-padded-b-5 aui-padded-t-5">简易办公</div>
+    <section class="aui-content  ">
+        <div class="aui-grid">
+            <div class="aui-row">
+                <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('noticelist')">
+                    <div id="badge_OaNotice" class="aui-badge" style="left:50%;display:none"></div>
+                    <i class="fa fa-bullhorn  aui-text-info"></i>
+                    <div class="aui-grid-label">公告</div>
+                </div>
+                <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('tasklist')">
+                    <div id="badge_OaTask" class="aui-badge" style="left:50%;display:none" ></div>
+                    <i class="fa fa-tasks aui-text-warning"></i>
+                    <div class="aui-grid-label">任务</div>
+                </div>
+                <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('workreportlist')">
+                    <div id="badge_OaWorkReport" class="aui-badge" style="left:50%;display:none"></div>
+                    <i class="fa fa-paper-plane-o aui-text-success"></i>
+                    <div class="aui-grid-label">汇报</div>
+                </div>
+                <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openApprove()">
+                    <div id="badge_approve" class="aui-badge" style="left:50%;display:none"></div>
+                    <i class="fa fa-check-square-o aui-text-info"></i>
+                    <div class="aui-grid-label">审批</div>
+                </div>
+
+                <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('signinpath')">
+                    <i class="fa fa-map-marker aui-text-danger"></i>
+                    <div class="aui-grid-label">考勤</div>
+                </div>
+                <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('doclist')">
+                    <i class="fa fa-file-text-o aui-text-danger"></i>
+                    <div class="aui-grid-label">文件</div>
+                </div>
+
+
+            </div>
+        </div>
+    </section>
+    <div class="aui-padded-l-15 aui-font-size-14  aui-padded-b-5 aui-padded-t-5">施工管理</div>
+    <section class="aui-content ">
+        <div class="aui-grid">
+            <div class="aui-row">
+              <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('site/workloglist')">
+                  <i class="fa fa-newspaper-o aui-text-danger"></i>
+                  <div class="aui-grid-label">日志</div>
+              </div>
+              <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('site/dynamiclist')">
+                  <i class="fa fa-leaf aui-text-warning"></i>
+                  <div class="aui-grid-label">动态</div>
+              </div>
+              <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('site/telltechlist')">
+                  <i class="fa fa-handshake-o aui-text-primary"></i>
+                  <div class="aui-grid-label">交底</div>
+              </div>
+              <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('site/safelist')">
+                  <i class="fa fa-strikethrough aui-text-primary"></i>
+                  <div class="aui-grid-label">安全</div>
+              </div>
+              <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('site/qtylist')">
+                  <i class="fa fa-quora aui-text-primary"></i>
+                  <div class="aui-grid-label">质量</div>
+              </div>
+              <!-- <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('site/workerinfolist')">
+                  <i class="fa fa-address-card-o aui-text-success"></i>
+                  <div class="aui-grid-label">工人</div>
+              </div> -->
+              <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('site/workercostlist')">
+                  <i class="fa fa-pencil-square-o aui-text-success"></i>
+                  <div class="aui-grid-label">记工</div>
+              </div>
+              <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('drawinglist')">
+                  <i class="fa fa-book aui-text-primary"></i>
+                  <div class="aui-grid-label">图纸</div>
+              </div>
+            </div>
+        </div>
+    </section>
+    <div class="aui-padded-l-15 aui-font-size-14 aui-padded-b-5 aui-padded-t-5">公司统计</div>
+    <section class="aui-content ">
+        <div class="aui-grid">
+            <div class="aui-row">
+              <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('chart/signinchart')">
+                  <i class="fa fa-calendar aui-text-warning"></i>
+                  <div class="aui-grid-label">考勤统计</div>
+              </div>
+              <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('chart/workerchart')">
+                  <i class="fa fa-bar-chart aui-text-info"></i>
+                  <div class="aui-grid-label">用工统计</div>
+              </div>
+              <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('chart/taskchart')">
+                  <i class="fa fa-line-chart aui-text-primary"></i>
+                  <div class="aui-grid-label">任务统计</div>
+              </div>
+              <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('chart/qtychart')">
+                  <i class="fa fa-pie-chart aui-text-success"></i>
+                  <div class="aui-grid-label">质量统计</div>
+              </div>
+              <div class="aui-col-xs-3 aui-padded-t-10 aui-padded-b-10" onclick="openModule('chart/safechart')">
+                  <i class="fa fa-area-chart aui-text-danger"></i>
+                  <div class="aui-grid-label">安全统计</div>
+              </div>
+            </div>
+        </div>
+    </section>
+
+
+</body>
+<script type="text/javascript" src="script/api.js" ></script>
+<script type="text/javascript" src="css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='script/common.js'></script>
+<script type='text/javascript' src='script/queryapi.js'></script>
+<script type="text/javascript">
+//var moduleBadgeCnt = {};
+var approvalLinks=["OaAppLeave","OaAppTravel","OaAppOut","OaAppExpense","OaAppPurchase","OaAppApproves"];
+var approveModules=["leavelist","approval/travellist","approval/outlist","approval/expenselist","approval/purchaselist","approval/approveslist"];//
+
+var isLoadRedPoint = true;
+    apiready = function () {
+
+      var header = $api.byId('aui-header');
+      $api.fixStatusBar(header);
+
+      //loadAppRedItems();
+    }
+
+    function loadAppRedItems(){
+      if(!isLoadRedPoint)
+        return ;
+        isLoadRedPoint = false;
+        setTimeout(function(){isLoadRedPoint = true;}, 5000 );
+
+      if(TServerInfo.getUserId() && TServerInfo.getUserId()!=""
+            && TServerInfo.getProjectId() && TServerInfo.getProjectId()!=""){
+        $(".aui-badge").css("display","none");
+
+        var approveCnt=0;
+        var params = $.extend({"ModuleGroup":"App"},TServerInfo.getProjUserParam());
+        AjaxApi.query("query_1011",params,function(data){
+          var datalist = data.list;
+          if(datalist){
+            for(var i=0;i<datalist.length;++i){
+               var item = datalist[i];
+               if(item[0] && item[3] && item[3]>0){
+                 if($.inArray(item[0],approvalLinks)>=0){
+                    approveCnt+=parseInt(item[3]);
+                    if(approveCnt>0){
+                      $("#badge_approve").css("display","block");
+                      $("#badge_approve").html(approveCnt);
+                    }
+                 }else{
+                   var el = $("#badge_"+item[0]);
+                   el.css("display","block");
+                   el.html(item[3]);
+                 }
+               }
+            }
+
+          }
+        });
+      }
+    }
+
+    function swithModuleGroup(){
+        setProjectInfo($api.getStorage("projectId"),$api.getStorage("projectName"));
+
+        //loadAppRedItems();
+    }
+
+    function openModule(moduleName)
+    {
+      if(!checkSelectProject())
+        return;
+
+      openRealWin(moduleName);
+
+      // var moduletname = moduleModuleLinkMap[moduleName];
+      //
+      // if(moduleBadgeCnt[moduletname] && moduleBadgeCnt[moduletname]>0){
+      //   var params = $.extend({"ModuleGroup":"App","Module":moduletname},TServerInfo.getProjUserParam());
+      //   AjaxApi.exec("query_9003",params,function(data){
+      //       $("#badge_"+moduleName).css("display","none");
+      //       moduleBadgeCnt[moduletname]=0;
+      //       openRealWin(moduleName);
+      //   });
+      // }else{
+      //   openRealWin(moduleName);
+      // }
+    }
+
+    function openRealWin(modulePath){
+      var realModuleName = modulePath;
+      var idx = modulePath.lastIndexOf("/");
+      if(idx>=0){
+        realModuleName =modulePath.substr(idx+1);
+      }
+
+      api.openWin({
+                    name: realModuleName+"_win",
+                    url: "html/"+modulePath+"_win.html",
+                    pageParam: {
+                        isFrame: false
+                    },
+                    bgColor: '#FFFFFF',
+                    slidBackEnabled: false,
+                    vScrollBarEnabled:false,
+                    hScrollBarEnabled:false,
+                    delay: 0
+                }
+        );
+    }
+
+    function selectProject(){
+      api.openWin({
+                    name: "app_selectproject",
+                    url: "selectproject.html",
+                    pageParam: {
+                        isFrame: false,
+                        srcWinName:"root",
+                        srcFrameName:"index.app"
+                    },
+                    bgColor: '#FFFFFF',
+                    slidBackEnabled: false,
+                    vScrollBarEnabled:false,
+                    hScrollBarEnabled:false,
+                    delay: 0
+                }
+        );
+    }
+
+    function setSelectProject(id,name,lon,lat){
+      setStorageProjectInfo(id,name,lon,lat);
+      setProjectInfo(id,name);
+    }
+
+    function setProjectInfo(id,name){
+      if(name=="") name="[选择项目]";
+      $("#worktitle").html(name);
+    }
+
+
+
+    function openApprove(){
+      var dialogBox = api.require('dialogBox');
+      dialogBox.share({
+          rect: {
+              w: 250,
+              h: 220
+          },
+          items: [{
+              text: '请假',
+              icon: 'widget://image/icon/leave.png'
+          }, {
+              text: '出差',
+              icon: 'widget://image/icon/travel.png'
+          }, {
+              text: '外出',
+              icon: 'widget://image/icon/out.png'
+          }, {
+              text: '报销',
+              icon: 'widget://image/icon/expense.png'
+          }, {
+              text: '采购',
+              icon: 'widget://image/icon/purchase.png'
+          }, {
+              text: '通用',
+              icon: 'widget://image/icon/approves.png'
+          }],
+          styles: {
+              bg: '#FFF',
+              column: 3,
+              horizontalSpace: 15,
+              verticalSpace: 30,
+              itemText: {
+                  color: '#000',
+                  size: 15,
+                  marginT: 10
+              },
+              itemIcon: {
+                  size: 40
+              }
+          },
+          tapClose:true
+      }, function(ret) {
+          //alert(JSON.stringify(ret));//ret.index 0
+
+          dialogBox.close({
+              dialogName: 'share'
+          });
+
+          if(ret.index<approveModules.length){
+            openRealWin(approveModules[ret.index]);
+          }
+      });
+    }
+</script>
+</html>

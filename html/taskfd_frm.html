@@ -1,0 +1,325 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <style type="text/css">
+        .aui-list .aui-list-item-media {
+            width: 3rem;
+        }
+        .notes-add {
+            position: fixed;
+            left: 0.5rem;
+            bottom: 0.5rem;
+            width: 3rem;
+            z-index: 99;
+        }
+        textarea {
+            height: 8rem;
+            background-color: #ffffff;
+            padding: 0.5rem;
+        }
+        .photos img {
+            display: block;
+            width: 100%;
+        }
+        .add-photos > div {
+            width: 100%;
+            height:5.15rem;
+            line-height: 5.15rem;
+        }
+        .add-photos > div .aui-iconfont {
+            font-size: 2rem;
+            color: #ccc;
+        }
+        .image-item {
+            position: relative;
+            height: 5.3rem;
+            overflow: hidden;
+            background-color: #f0f0f0;
+        }
+        .image-item img {
+            display: block;
+            margin: 0 auto;
+            width: auto;
+            height: 100%;
+        }
+        .image-item .delete-btn {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 28px;
+            height: 28px;
+            background-color: rgba(0,0,0,0.7);
+            margin-left: -14px;
+            margin-top: -14px;
+            color: #ffffff;
+            text-align: center;
+            border-radius: 50%;
+        }
+
+        .master_content{
+          line-height:15px
+        }
+
+        .master_content_2{
+          line-height:15px
+        }
+    </style>
+</head>
+<body style="background-color:#f5f5f5">
+
+<section class="aui-grid aui-font-size-14 aui-padded-15" style="background-color:#f5f5f5;">
+  项目名称: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="projectTitle"></span>
+
+</section>
+<hr class="aui-hr "/>
+<section id="taskInfoContent" class="aui-font-size-14" style="background-color:#f5f5f5;">
+
+
+</section>
+
+<script id="taskInfoTpl" type="text/html">
+  {{each list}}
+<div class="aui-grid " style="background-color:#f5f5f5;">
+  <div class="aui-row aui-padded-l-15 aui-padded-r-15 aui-margin-b-0">
+  <div class="aui-col-xs-6 aui-text-left master_content" style="padding-bottom:0">任务发起人：&nbsp;<span class="aui-font-size-12">{{$value[3]}}<span></div>
+  <div class="aui-col-xs-6 aui-text-right master_content" style="padding-bottom:0">发布时间：&nbsp;<span class="aui-font-size-12">{{$value[7]}}<span></div>
+  </div>
+  <div class="aui-row aui-padded-l-15 aui-padded-r-15">
+  <div class="aui-col-xs-6 aui-text-left master_content" style="padding-bottom:0">任务督办人：&nbsp;<span class="aui-font-size-12">{{$value[5]}}<span></div>
+  <div class="aui-col-xs-6 aui-text-right master_content" style="padding-bottom:0">截止时间：&nbsp;<span class="aui-font-size-12">{{$value[8]}}<span></div>
+  </div>
+  <div class="aui-row aui-padded-l-15 aui-padded-r-15">
+  <div class="aui-col-xs-6 aui-text-left master_content" style="padding-bottom:0">任务执行人：&nbsp;<span class="aui-font-size-12">{{$value[4]}}<span></div>
+  <div class="aui-col-xs-6 aui-text-right master_content aui-font-size-12" style="padding-bottom:0">  {{$value[9] | formatPriority}} &nbsp; {{$value[6] |formatExpireDate}}</div>
+  </div>
+</div>
+  <div class=" aui-padded-5 aui-padded-l-15" style="margin-top:10px">
+任务名称：&nbsp;<span class="aui-font-size-12">{{$value[1]}}<span>
+  </div>
+  <div class=" aui-padded-5 aui-padded-l-15" >
+任务内容：&nbsp;<span class="aui-font-size-12">{{$value[2]}}<span>
+
+  </div>
+
+  {{/each}}
+</script>
+
+
+<div class=" aui-margin-10 aui-margin-l-15 aui-font-size-12">附件或照片</div>
+
+<section class="aui-content-padded">
+    <div id="taskImageContent"  class="aui-row aui-row-padded">
+
+    </div>
+</section>
+
+<script id="taskImageTpl" type="text/html">
+    {{each list}}
+  <div  class="aui-col-xs-4 image-item" onclick="ImageApi.openImageBrowser(['{{$value[1]}}']);">
+      <image src="{{$value[1]}}" class="notes-image" />
+  </div>
+    {{/each}}
+</script>
+
+
+<section id="taskFeedbackContent" class="aui-grid aui-font-size-14" style="line-height:1.5rem;background-color:#f5f5f5;">
+
+</section>
+
+<script id="taskFeedbackTpl" type="text/html">
+    {{each list}}
+    <hr class="aui-hr "/>
+    <div class="aui-row aui-padded-l-0 aui-padded-r-5" >
+      <div class="aui-col-xs-2 aui-text-center aui-font-size-12" style="">{{$value[3] | formatKind}}<br/>{{$value[6]}}</div>
+      <div class="aui-col-xs-10 aui-text-left aui-padded-15" style="background-color:#ffffff;">
+        <div>
+          <div class="aui-pull-left" >
+            <img src="{{$value[8]}}" class="aui-img-round"   style="height:40px;width:40px;display:inline-block" />
+            </div>
+            <div class="aui-pull-left" style="line-height:40px">{{$value[2]}}
+            </div>
+          <div class="aui-pull-right">进度{{$value[4]}}</div>
+        </div>
+        <br/><br/>
+        <div>
+          任务反馈：{{$value[5]}}
+        </div>
+        <div  class="aui-row aui-row-padded " >
+            {{each $value[7]}}
+            <div  class="aui-col-xs-6 image-item" style="padding: 0.125rem;" onclick="ImageApi.openImageBrowser(['{{$value[0]}}']);">
+              <image src="{{$value[0]}}" class="notes-image" />
+            </div>
+            {{/each}}
+        </div>
+      </div>
+    </div>
+
+    {{/each}}
+</script>
+
+
+<div id="spanFoot" style="line-height:2.2rem" >&nbsp;</div>
+<footer class="aui-bar aui-bar-tab aui-border-t" id="footer" >
+
+    <div class="aui-bar-tab-item aui-active" tapmode id='work' style="background-color:#eeeeee;" onclick="feedback()">
+        <div class="aui-bar-tab-label">任务反馈</div>
+    </div>
+</footer>
+</body>
+
+<script type="text/javascript" src="../script/api.js" ></script>
+<script type="text/javascript" src="../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../script/common.js'></script>
+<script type='text/javascript' src='../script/queryapi.js'></script>
+<script type='text/javascript' src='../script/template.js'></script>
+<script type="text/javascript" src="../script/imageapi.js"></script>
+<script type="text/javascript">
+var prNameMap={0:"普通",1:"重要",2:"紧急"};
+var kindNameMap={0:"执行",1:"督办"};
+
+template.helper('formatPriority', function(pr) {
+  return prNameMap[pr];
+});
+
+template.helper('formatKind', function(pr) {
+  return kindNameMap[pr];
+});
+
+template.helper('formatExpireDate', function(expTimeStr) {
+  var expTime = Date.parse(expTimeStr);
+  var dure = expTime - new Date();
+  if(dure>0){
+    var hours = parseInt(dure) / 1000 / 3600;
+    return "任务倒计时:"+parseInt(hours)+"小时";
+  }
+
+  return "已完成";
+});
+
+apiready = function () {
+  var height = $("#footer").height();
+  $('#spanFoot').css('line-height', height+"px");
+
+  $("#projectTitle").html($api.getStorage("projectName"));
+
+  if(api.pageParam.taskId && api.pageParam.taskId!=""){
+    loadTaskInfo();
+    loadImages(api.pageParam.taskId);
+    loadFeedback();
+  }
+}
+
+function loadTaskInfo(){
+  AjaxApi.query("query_1124",{"TaskId":api.pageParam.taskId},function(data){
+    var datalist = data.list;
+    if(datalist){
+      var tplData = {
+        "list" : datalist
+      };
+      var html = template("taskInfoTpl", tplData);
+
+      $("#taskInfoContent").html(html);
+    }
+  });
+}
+
+function preImageUrl(datalist)
+{
+  var picIndex = 1;
+    for (var i = 0; i < datalist.length; i++) {
+      var item = datalist[i];
+      if(item[picIndex] && item[picIndex]!=""){
+        item[picIndex] = ImageApi.getImageUrl(item[0],item[picIndex]);
+      }else{
+        item[picIndex]="../image/addImg.png";
+      }
+    }
+}
+
+function loadImages(ownerId){
+  AjaxApi.query("query_1006",{"OwnerId":ownerId},function(data){
+      var datalist = data.list;
+      if(datalist&& datalist.length>0){
+        preImageUrl(datalist);
+        var tplData = {
+          "list" : datalist
+        };
+        var html = template("taskImageTpl", tplData);
+        $("#taskImageContent").html(html);
+
+      }
+    });
+}
+
+function preFeedbackImageUrl(datalist){
+  var picIndex = 7;
+    for (var i = 0; i < datalist.length; i++) {
+      var item = datalist[i];
+      if(item[picIndex] && item[picIndex]!=""){
+        var picIds = item[picIndex].split(",");
+        var picUrls = [];
+        for(var j=0;j<picIds.length;++j){
+          var url= ImageApi.getImageUrl(item[0],picIds[j]);
+          picUrls.push([url]);
+        }
+        item[picIndex] =picUrls;
+      }else{
+        item[picIndex] =[];
+      }
+    }
+}
+
+function preUsermageUrl(datalist)
+{
+  var imageIdx = 8;
+    for (var i = 0; i < datalist.length; i++) {
+      var item = datalist[i];
+      if(item[imageIdx] && item[imageIdx]!=""){
+        item[imageIdx] = ImageApi.getGlobleImageUrl(item[1],item[imageIdx]);
+      }else{
+        item[imageIdx]="../image/user.jpg";
+      }
+    }
+}
+
+function loadFeedback(){
+  AjaxApi.query("query_1125",{"TaskId":api.pageParam.taskId},function(data){
+    var datalist = data.list;
+    if(datalist&& datalist.length>0){
+      preUsermageUrl(datalist);
+      preFeedbackImageUrl(datalist);
+      var tplData = {
+        "list" : datalist
+      };
+      var html = template("taskFeedbackTpl", tplData);
+
+      $("#taskFeedbackContent").html(html);
+    }
+  });
+}
+
+function feedback(){
+  api.openWin({
+                name: "taskfdnew_win",
+                url: "taskfdnew_win.html",
+                pageParam: {
+                    isFrame: false,
+                    taskId:api.pageParam.taskId,
+                    taskKind:api.pageParam.taskKind
+                },
+                bgColor: '#FFFFFF',
+                slidBackEnabled: false,
+                vScrollBarEnabled:false,
+                hScrollBarEnabled:false,
+                delay: 0
+            }
+    );
+
+}
+
+</script>
+</html>

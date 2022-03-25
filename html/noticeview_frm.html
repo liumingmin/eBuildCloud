@@ -1,0 +1,303 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,aItemress=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <style>
+    .image-item {
+        position: relative;
+        height: 5.3rem;
+        overflow: hidden;
+        background-color: #f0f0f0;
+    }
+    .image-item img {
+        display: block;
+        margin: 0 auto;
+        width: auto;
+        height: 100%;
+    }
+    .image-item .delete-btn {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 28px;
+        height: 28px;
+        background-color: rgba(0,0,0,0.7);
+        margin-left: -14px;
+        margin-top: -14px;
+        color: #ffffff;
+        text-align: center;
+        border-radius: 50%;
+    }
+    </style>
+</head>
+<body>
+  <section class="aui-content-padded">
+<ul class="aui-list aui-form-list">
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                标题
+            </div>
+            <div class="aui-list-item-input">
+                <input id="title" type="text" placeholder="" readonly>
+            </div>
+        </div>
+    </li>
+  </ul>
+</section>
+
+  <section class="aui-content-padded">
+    <textarea id="content"  style="height:8em;overflow-y:scroll;background-color:#ffffff;" placeholder="" readonly ></textarea>
+  </section>
+
+    <section  class="aui-content-padded">
+      <div id="noticeImageContent"  class="aui-row aui-row-padded">
+      </div>
+    </section>
+
+    <script id="noticeImageTpl" type="text/html">
+
+        {{each list}}
+
+        <div  class="aui-col-xs-4 image-item" onclick="ImageApi.openImageBrowser(['{{$value[1]}}']);">
+            <image src="{{$value[1]}}" class="notes-image"   />
+        </div>
+
+        {{/each}}
+    </script>
+
+
+    <div class="aui-tab " id="tab" >
+        <div class="aui-tab-item aui-active">已阅</div>
+        <div class="aui-tab-item">未阅</div>
+        <div class="aui-tab-item">评论</div>
+    </div>
+
+    <div id="viewedUserTabContent" name="noticeTabContent"  >
+
+    </div>
+
+    <div id="notviewUserTabContent" name="noticeTabContent" style="display:none">
+
+    </div>
+
+    <div id="noticeCommentContent" name="noticeTabContent" class="aui-grid aui-font-size-14" style="background-color:#f5f5f5;display:none">
+
+    </div>
+
+    <script id="userTpl" type="text/html">
+      {{each list}}
+      <div  style="margin-top:10px !important;margin-left:10px;display:inline-block !important">
+        <div align="center"><img src="{{$value[2]}}"   style="height:40px;width:40px" class="aui-img-round"/></div>
+        <div class="aui-text-center aui-font-size-14" style="width:100%">{{$value[3]}}</div>
+      </div>
+      {{/each}}
+      </script>
+
+    <script id="noticeCommentTpl" type="text/html">
+      {{each list}}
+      <div class="aui-row  aui-padded-r-5" >
+        <div class="aui-col-xs-2 " style="height:80px">
+          <div align="center"><img src="{{$value[2]}}" class="aui-img-round"   style="height:40px;width:40px;display:inline-block" /></div>
+          <div class="aui-text-center" style="width:100%">{{$value[3]}}</div>
+        </div>
+        <div class="aui-col-xs-10 aui-text-left aui-padded-15"  style="height:100px">
+          {{$value[4]}}
+        </div>
+      </div>
+      <hr class="aui-hr "/>
+      {{/each}}
+      </script>
+<div id="footDiv" style="visibility:hidden">
+<div id="spanFoot" style="line-height:2.2rem">&nbsp;</div>
+    <footer id="footer" class="aui-bar aui-bar-tab aui-border-t">
+            <div class="aui-bar-tab-item aui-padded-l-15 aui-padded-r-15" tapmode style="width: auto;">
+                <div class="search-input aui-font-size-14">
+                      <input  id="CommectContent" placeholder="请输入评论内容" type="text" >
+                </div>
+            </div>
+            <div class="aui-bar-tab-item aui-font-size-14" tapmode  style="width: 2.2rem;" onclick="saveComment();">
+                发送
+            </div>
+        </footer>
+      </div>
+</body>
+<script type="text/javascript" src="../script/api.js" ></script>
+<script type="text/javascript" src="../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../script/common.js'></script>
+<script type='text/javascript' src='../script/queryapi.js'></script>
+<script type='text/javascript' src='../script/template.js'></script>
+<script type="text/javascript" src="../script/imageapi.js"></script>
+<script type="text/javascript" src="../script/aui-tab.js"></script>
+<script type="text/javascript">
+
+var tabIndex = 1;
+var tab1loaded = true;
+var tab2loaded = false;
+var tab3loaded=false;
+    apiready = function(){
+        api.parseTapmode();
+        createTab();
+
+        var height = $("#footer").height();
+        $('#spanFoot').css('line-height', height+"px");
+
+        if(api.pageParam.noticeId && api.pageParam.noticeId!=""){
+            loadEntity(api.pageParam.noticeId);
+            loadImages(api.pageParam.noticeId);
+            loadViewedUsers();
+        }
+    }
+
+    function createTab(){
+      var tab = new auiTab({
+        element:document.getElementById("tab"),
+    },function(ret){
+        tabIndex = ret["index"];
+        if(tabIndex == 1){
+          if(!tab1loaded) loadViewedUsers();
+          tab1loaded = true;
+          hideTabContents();
+          $("#viewedUserTabContent").css("display","block");
+        }else if(tabIndex==2){
+          if(!tab2loaded) loadNotViewedUsers();
+          tab2loaded=true;
+          hideTabContents();
+          $("#notviewUserTabContent").css("display","block");
+        }else if(tabIndex==3){
+          if(!tab3loaded) loadCommects();
+          tab3loaded=true;
+          hideTabContents();
+          $("#noticeCommentContent").css("display","block");
+          $("#footDiv").css("visibility","visible");
+        }
+    });
+  }
+
+    function hideTabContents(){
+      $("*[name='noticeTabContent']").each(function(){
+        $(this).css("display","none");
+      });
+
+      $("#footDiv").css("visibility","hidden");
+    }
+
+    function loadEntity(id){
+      AjaxApi.rest("retrievEntity","OaNotice",id,function(data){
+            $("#title").val(data.Title);
+            $("#content").val(data.Content);
+        });
+    }
+
+    function preImageUrl(datalist)
+    {
+      var picIndex = 1;
+        for (var i = 0; i < datalist.length; i++) {
+          var item = datalist[i];
+          if(item[picIndex] && item[picIndex]!=""){
+            item[picIndex] = ImageApi.getImageUrl(item[0],item[picIndex]);
+          }else{
+            item[picIndex]="image/project.jpg";
+          }
+
+        }
+    }
+
+    function loadImages(ownerId){
+      AjaxApi.query("query_1006",{"OwnerId":ownerId},function(data){
+          var datalist = data.list;
+          if(datalist&& datalist.length>0){
+            preImageUrl(datalist);
+            var tplData = {
+              "list" : datalist
+            };
+            var html = template("noticeImageTpl", tplData);
+            $("#noticeImageContent").html(html);
+
+          }
+        });
+    }
+
+    function loadViewedUsers(){
+      AjaxApi.query("query_1103",{"NoticeId":api.pageParam.noticeId,"IsView":"1"},function(data){
+          var datalist = data.list;
+          if(datalist&& datalist.length>0){
+            preUsermageUrl(datalist);
+            var tplData = {
+              "list" : datalist
+            };
+            var html = template("userTpl", tplData);
+            $("#viewedUserTabContent").html(html);
+          }
+        });
+    }
+
+    function loadNotViewedUsers(){
+      AjaxApi.query("query_1103",{"NoticeId":api.pageParam.noticeId,"IsView":"0"},function(data){
+          var datalist = data.list;
+          if(datalist&& datalist.length>0){
+            preUsermageUrl(datalist);
+            var tplData = {
+              "list" : datalist
+            };
+            var html = template("userTpl", tplData);
+            $("#notviewUserTabContent").html(html);
+          }
+        });
+    }
+
+    function preUsermageUrl(datalist)
+    {
+      var userIdx = 1;
+      var imageIdx = 2;
+        for (var i = 0; i < datalist.length; i++) {
+          var item = datalist[i];
+          if(item[imageIdx] && item[imageIdx]!=""){
+            item[imageIdx] = ImageApi.getGlobleImageUrl(item[userIdx],item[imageIdx]);
+          }else{
+            item[imageIdx]="../image/user.jpg";
+          }
+        }
+    }
+
+    function loadCommects(){
+        AjaxApi.query("query_1102",{"NoticeId":api.pageParam.noticeId},function(data){
+            var datalist = data.list;
+            if(datalist&& datalist.length>0){
+              preUsermageUrl(datalist);
+              var tplData = {
+                "list" : datalist
+              };
+              var html = template("noticeCommentTpl", tplData);
+              $("#noticeCommentContent").html(html);
+
+            }
+          });
+
+    }
+
+    function saveComment(){
+      if($("#CommectContent").val() == ""){
+        return ;
+      }
+
+        var ownerId = GetUuid();
+        var entObj = {"Id":ownerId,
+              "NoticeId":api.pageParam.noticeId,
+              "Content":$("#CommectContent").val(),
+              "ProjectId":TServerInfo.getProjectId(),
+              "UserId":TServerInfo.getUserId()
+            };
+
+        AjaxApi.rest("createEntity","OaNoticeComment",entObj,function(data){
+              $("#CommectContent").val("");
+              loadCommects();
+        });
+    }
+
+</script>
+</html>

@@ -1,0 +1,761 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../css/font-awesome/css/font-awesome.min.css" />
+    <style type="text/css">
+        .aui-list .aui-list-item-media {
+            width: 3rem;
+        }
+        .notes-add {
+            position: fixed;
+            left: 0.5rem;
+            bottom: 0.5rem;
+            width: 3rem;
+            z-index: 99;
+        }
+        textarea {
+            height: 8rem;
+            background-color: #ffffff;
+            padding: 0.5rem;
+        }
+        .photos img {
+            display: block;
+            width: 100%;
+        }
+        .add-photos > div {
+            width: 100%;
+            height:5.15rem;
+            line-height: 5.15rem;
+        }
+        .add-photos > div .aui-iconfont {
+            font-size: 2rem;
+            color: #ccc;
+        }
+        .image-item {
+            position: relative;
+            height: 5.3rem;
+            overflow: hidden;
+            background-color: #f0f0f0;
+        }
+        .image-item img {
+            display: block;
+            margin: 0 auto;
+            width: auto;
+            height: 100%;
+        }
+        .image-item .delete-btn {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 28px;
+            height: 28px;
+            background-color: rgba(0,0,0,0.7);
+            margin-left: -14px;
+            margin-top: -14px;
+            color: #ffffff;
+            text-align: center;
+            border-radius: 50%;
+        }
+
+        .aui-list-item.wechat-top {
+            background-color: #f3f3f7;
+        }
+        .aui-list .wechat-avatar {
+            width:3rem;
+        }
+        .wechat-avatar .aui-row-padded {
+            background-color: #dddee0;
+            padding: 0.1rem;
+            border-radius: 0.2rem;
+            margin-left: -0.05rem;
+            margin-right: -0.05rem;
+        }
+        .wechat-avatar .aui-row-padded [class*=aui-col-xs-] {
+            padding: 0.05rem;
+        }
+        .wechat-avatar,
+        .wechat-avatar > img {
+            border-radius:0.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="aui-tab" id="tab" >
+        <div class="aui-tab-item aui-active">基本信息</div>
+        <div class="aui-tab-item">人员管理</div>
+        <div class="aui-tab-item">设置</div>
+    </div>
+
+<div id="projectBaseContent">
+    <section class="aui-content-padded">
+      <div class="aui-content aui-margin-b-15">
+  <ul class="aui-list aui-form-list">
+      <!-- <li class="aui-list-header">基本信息</li> -->
+      <li class="aui-list-item">
+          <div class="aui-list-item-inner">
+              <div class="aui-list-item-label">
+                  项目名
+              </div>
+              <div class="aui-list-item-input">
+                  <input id="FullName" type="text" placeholder="">
+              </div>
+          </div>
+      </li>
+      <li class="aui-list-item">
+          <div class="aui-list-item-inner">
+              <div class="aui-list-item-label">
+                  简称
+              </div>
+              <div class="aui-list-item-input">
+                  <input id="ProjectName" type="text" placeholder="">
+              </div>
+          </div>
+      </li>
+
+      <li class="aui-list-item">
+          <div class="aui-list-item-inner">
+              <div class="aui-list-item-label">
+                  开工日期
+              </div>
+              <div class="aui-list-item-input aui-margin-l-10">
+                  <input id="Date1" type="text" placeholder="" readonly onclick="datepick('Date1')">
+              </div>
+              <div class="aui-pull-right  " style="width:40px !important">
+                  <a onclick="datepick('Date1')"  style="width:100%"> &gt;&gt;&nbsp;</a>
+              </div>
+          </div>
+      </li>
+
+      <li class="aui-list-item">
+          <div class="aui-list-item-inner">
+              <div class="aui-list-item-label">
+                  合同工期
+              </div>
+              <div class="aui-list-item-input">
+                  <input id="DuratioinDays" type="number" placeholder="">
+              </div>
+          </div>
+      </li>
+
+      <li class="aui-list-item">
+          <div class="aui-list-item-inner">
+              <div class="aui-list-item-label">
+                  图片
+              </div>
+              <div class="aui-list-item-input aui-padded-5" >
+                <div id="imageLists"  >
+                    <div id="txtImage" class="add-photos "  onclick="ImageApi.fastSelectImage({},'txtImage',false);">
+                        <div class="aui-border aui-text-center notes-image image-item">
+                            <i class="aui-iconfont aui-icon-plus"></i>
+                        </div>
+                    </div>
+                </div>
+              </div>
+          </div>
+      </li>
+    </ul>
+    </section>
+
+    <section class="aui-content-padded aui-clearfix">
+        <div class="aui-info">
+            <div class="aui-info-item aui-padded-r-10" style="width: 13rem">
+                <div>
+                    <i class="aui-iconfont aui-icon-location"></i>
+                    <span id="Address" class="aui-ellipsis" style="display:inline">[项目位置]</span>
+                </div>
+            </div>
+            <div class="aui-info-item" style="width: 50px;" tapmode onclick="getLocation()">
+                <!-- <i class="aui-iconfont aui-icon-refresh aui-text-info aui-margin-r-5"></i> -->
+                <i id="locicon" class="fa fa-refresh    aui-text-info aui-margin-r-5"></i>
+                <span class="aui-text-info">定位</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- <div class="aui-text-center  aui-margin-15" >
+    <div class="aui-btn aui-btn-block aui-btn-primary" onclick="signinsetting()">考勤设置</div>
+    </div> -->
+
+    <!-- <div class="aui-text-center  aui-margin-15" >
+    <div class="aui-btn aui-btn-block aui-btn-primary" onclick="expensecategorysetting()">报销设置</div>
+    </div> -->
+
+</div>
+
+<div id="projectUsersContent" style="display:none">
+
+  <ul id="projectUsersList" class="aui-list aui-media-list" >
+
+
+    </ul>
+    <div class="aui-text-center  aui-margin-15" >
+      <div class="aui-btn aui-btn-block aui-btn-primary" onclick="inviteUserPhone()">手机号添加</div>
+    </div>
+</div>
+
+    <!-- <section class="aui-content-padded aui-padded-15">
+        <p><div class="aui-btn aui-btn-success aui-btn-block aui-btn-sm " id="commitBtn" onclick="commit()">保存</div></p>
+    </section> -->
+
+    <script id="projectUsersTpl" type="text/html">
+
+        {{each list}}
+
+        <li class="aui-list-item aui-list-item-middle" id="{{$value[0]}}">
+           <div class="aui-media-list-item-inner">
+            <div class="aui-list-item-media" style="width:auto;">
+                <img src=" {{$value[3]}}"   style="height:40px;width:40px" class="aui-img-round"/>
+            </div>
+            <div class="aui-list-item-inner">
+              <div class="aui-list-item-text">
+                  <div class="aui-list-item-title">{{$value[2]}}({{$value[1]}})   </div>
+                  <div class="aui-list-item-right">
+                      {{if $value[4] =="1"}}<i class="fa fa-minus-square-o fa-2x aui-text-danger" onclick="kickUser('{{$value[0]}}')"></i>{{/if}}
+                      {{if $value[4] =="2"}}[待加入] {{/if}}
+                  </div>
+              </div>
+             </div>
+            </div>
+        </li>
+
+
+        {{/each}}
+    </script>
+
+<div id="projectBpmContent"  style="display:none;margin-top:1px">
+  <div class="aui-padded-l-15 aui-font-size-14  aui-padded-b-5 aui-padded-t-5">流程设置</div>
+  <div class="aui-grid">
+      <div class="aui-row">
+        <div class="aui-col-xs-4 aui-padded-t-10 aui-padded-b-10" onclick="openBpmNodes('leave','请假')">
+            <img src="../image/icon/leave.png" style="width:40px;height:40px;margin: 0 auto" />
+            <div class="aui-grid-label">请假</div>
+        </div>
+        <div class="aui-col-xs-4 aui-padded-t-10 aui-padded-b-10" onclick="openBpmNodes('travel','出差')">
+            <img src="../image/icon/travel.png" style="width:40px;height:40px;margin: 0 auto" />
+            <div class="aui-grid-label">出差</div>
+        </div>
+        <div class="aui-col-xs-4 aui-padded-t-10 aui-padded-b-10" onclick="openBpmNodes('out','外出')">
+            <img src="../image/icon/out.png" style="width:40px;height:40px;margin: 0 auto" />
+            <div class="aui-grid-label">外出</div>
+        </div>
+        <div class="aui-col-xs-4 aui-padded-t-10 aui-padded-b-10" onclick="openBpmNodes('expense','报销')">
+            <img src="../image/icon/expense.png" style="width:40px;height:40px;margin: 0 auto" />
+            <div class="aui-grid-label">报销</div>
+        </div>
+        <div class="aui-col-xs-4 aui-padded-t-10 aui-padded-b-10" onclick="openBpmNodes('purchase','采购')">
+            <img src="../image/icon/purchase.png" style="width:40px;height:40px;margin: 0 auto" />
+            <div class="aui-grid-label">采购</div>
+        </div>
+        <div class="aui-col-xs-4 aui-padded-t-10 aui-padded-b-10" onclick="openBpmNodes('approves','通用')">
+            <img src="../image/icon/approves.png" style="width:40px;height:40px;margin: 0 auto" />
+            <div class="aui-grid-label">通用</div>
+        </div>
+      </div>
+  </div>
+
+  <div class="aui-padded-l-15 aui-font-size-14  aui-padded-b-5 aui-padded-t-5">其他设置</div>
+  <div class="aui-grid">
+      <div class="aui-row">
+        <div class="aui-col-xs-4 aui-padded-t-10 aui-padded-b-10" onclick="signinsetting()">
+            <i class="fa fa-2x fa-map-marker aui-text-danger" style="width:40px;height:40px;margin: 0 auto"></i>
+            <div class="aui-grid-label">考勤</div>
+        </div>
+        <div class="aui-col-xs-4 aui-padded-t-10 aui-padded-b-10" onclick="expensecategorysetting()">
+            <i class="fa fa-2x fa-yen aui-text-warning" style="width:40px;height:40px;margin: 0 auto"></i>
+            <div class="aui-grid-label">报销</div>
+        </div>
+        <div class="aui-col-xs-4 aui-padded-t-10 aui-padded-b-10" onclick="openModule('site/workerinfolist')">
+          <i class="fa fa-2x fa-address-card-o aui-text-success" style="width:40px;height:40px;margin: 0 auto"></i>
+          <div class="aui-grid-label">工人</div>
+        </div>
+      </div>
+  </div>
+
+</div>
+
+</body>
+
+<script type='text/javascript' src='../script/api.js'></script>
+<script type="text/javascript" src="../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../script/common.js'></script>
+<script type='text/javascript' src='../script/queryapi.js'></script>
+<script type='text/javascript' src='../script/template.js'></script>
+<script type="text/javascript" src="../script/hammer.min.js"></script>
+<script type="text/javascript" src="../script/imageapi.js"></script>
+<script type="text/javascript" src="../script/aui-tab.js"></script>
+<script type="text/javascript" src="../script/aui-dialog.js" ></script>
+<script type="text/javascript" src="../script/aui-toast.js" ></script>
+<script type="text/javascript" src="../script/bluebird.min.js" ></script>
+<script type='text/javascript'>
+
+var projectObj= {};
+var projectId = null;
+var tab2loaded=false;
+var dialog;
+var toast = new auiToast();
+
+function openModule(modulePath){
+  var realModuleName = modulePath;
+  var idx = modulePath.lastIndexOf("/");
+  if(idx>=0){
+    realModuleName =modulePath.substr(idx+1);
+  }
+
+  api.openWin({
+                name: realModuleName+"_win",
+                url: modulePath+"_win.html",
+                pageParam: {
+                    isFrame: false
+                },
+                bgColor: '#FFFFFF',
+                slidBackEnabled: false,
+                vScrollBarEnabled:false,
+                hScrollBarEnabled:false,
+                delay: 0
+            }
+    );
+}
+
+function datepick(nodeid){
+  api.openPicker({
+    type: 'date',
+    date: new Date().Format("yyyy-MM-dd"),
+    title: '选择日期'
+  },function(ret,err){
+      if (ret) {
+        var monthstr = ret.month+"";
+        var daystr = ret.day+"";
+        var yearstr = ret.year+"";
+        $("#"+nodeid).val(yearstr+"-"+monthstr.PadLeft(2,0)+"-"+daystr.PadLeft(2,0));
+      }
+  });
+}
+
+apiready = function(){
+   dialog = new auiDialog({});
+
+
+  projectId = api.pageParam.projectId;
+  if(projectId){
+    AjaxApi.rest("retrievEntity","Project",projectId,function(data){
+        projectObj = data;
+        $("#ProjectName").val(projectObj.Name);
+        $("#FullName").val(projectObj.FullName);
+        $("#Descp").val(projectObj.Descp);
+        $("#Address").html(projectObj.Address);
+        $("#Date1").val(projectObj.Date1.sliceWith(gDayLtTimeSuffix));
+        $("#DuratioinDays").val(projectObj.DuratioinDays);
+
+        if(projectObj.PictureId && projectObj.PictureId!=""){
+          var updateRender = template.compile(ImageApi.updateTpl);
+          var showImgHtml =updateRender({"imageId":projectObj.PictureId, imageUrl:ImageApi.getGlobleImageUrl(projectObj.Id,projectObj.PictureId)});
+          $("#txtImage").html(showImgHtml);
+        }
+
+    });
+  }
+
+  var tab = new auiTab({
+    element:document.getElementById("tab"),
+    },function(ret){
+        tabIndex = ret["index"];
+        if(tabIndex == 1){
+            hideAllTabs();
+            $("#projectBaseContent").css("display","block");
+        }else if(tabIndex==2){
+          if(!projectId){
+            api.toast({
+                msg : "必须先创建项目!",
+                duration : 2000,
+                location : 'bottom'
+              });
+              return;
+          }
+
+          hideAllTabs();
+          $("#projectUsersContent").css("display","block");
+
+          if(!tab2loaded)
+              loadProjectUsers();
+            tab2loaded=true;
+        }else if(tabIndex==3){
+          if(!projectId){
+            api.toast({
+                msg : "必须先创建项目!",
+                duration : 2000,
+                location : 'bottom'
+              });
+              return;
+          }
+
+          hideAllTabs();
+          $("#projectBpmContent").css("display","block");
+        }
+    });
+}
+
+function hideAllTabs(){
+  $("#projectBaseContent").css("display","none");
+  $("#projectUsersContent").css("display","none");
+  $("#projectBpmContent").css("display","none");
+}
+
+function enableClickOnceBtn(){
+  try{
+  api.execScript({
+    name: 'projectcurd_win',
+    script: 'enableClickOnceBtn()'
+   });
+  }catch(e){}
+}
+
+function commit(){
+  if($("#ProjectName").val() == ""){
+    showMsg("项目名称必填!");
+    enableClickOnceBtn();
+    return ;
+  }
+
+  toast.loading({
+        title:"正在保存...",
+        duration:2000
+    },function(ret){
+
+    });
+
+   saveEntity();
+  // if(projectId){
+  //   new Promise(function(resolve, reject){resolve(projectObj.Id);}).then(saveImages).then(updateEntity).then(saveSuccess);
+  // }else{
+  //   new Promise(function(resolve, reject){var id = GetUuid();resolve(id);}).then(saveImages).then(createEntity).then(saveSuccess);
+  // }
+
+}
+
+var masterEntityOp = new EntityBatchOp("Project","FullName,Name,Descp,Lon,Lat,Address,PictureId,Date1,DuratioinDays");
+
+function saveEntity(){
+  //master
+  var isCreate = true;
+  var ownerId="";
+  if(api.pageParam.projectId && api.pageParam.projectId!=""){
+      ownerId = api.pageParam.projectId;
+      isCreate = false;
+  }else{
+      ownerId = GetUuid();
+  }
+
+  var entObj = {"Id":ownerId,
+       "FullName":$("#FullName").val(),
+        "Name":$("#ProjectName").val(),
+        "Descp":$("#Descp").val(),
+      "CreateUserId":TServerInfo.getUserId(),
+    "Lon":projectObj.Lon,
+    "Lat":projectObj.Lat,
+    "Address":$("#Address").html(),
+  "PictureId":projectObj.PictureId,
+"Date1":$("#Date1").val()+gDayLtTimeSuffix,
+"DuratioinDays":parseInt($("#DuratioinDays").val())
+};
+
+  $api.setStorage('lon',projectObj.Lon);
+  $api.setStorage('lat',projectObj.Lat);
+
+  //images
+  var imageInfos = [];
+  $("#imageLists").find("img").each(function(){
+    var itemId=$(this).attr("id");
+    if(itemId != projectObj.PictureId){
+      var imageInfo = ImageApi.getImageInfo(itemId,$(this).attr("src"),"");
+      imageInfo["OwnerId"] = ownerId;
+      imageInfos.push(imageInfo);
+    }
+  });
+
+  if(imageInfos.length>0 && projectObj.PictureId != imageInfos[0].ItemId){
+     entObj.PictureId = imageInfos[0].ItemId;
+  }
+
+  if(isCreate){
+    masterEntityOp.addEntity(entObj);
+  }else{
+     masterEntityOp.updateEntity(entObj);
+  }
+
+  AjaxApi.batchSave([masterEntityOp],imageInfos,
+    {"noTips":true,"Globle":true},function(data){
+       saveSuccess();
+  });
+}
+
+function saveSuccess(){
+  api.toast({
+      msg : "提交成功!",
+      duration : 1000,
+      location : 'bottom'
+    });
+
+    setTimeout(function(){reloadParent();api.closeWin();},1000);
+}
+
+function reloadParent(){
+  try{
+  api.execScript({
+    name: 'root',
+    frameName: 'index.project',
+    script: 'switchProjectTab(1)'
+   });
+  }catch(e){}
+}
+
+// var imageInfos = [];
+// $("#imageLists").find("img").each(function(){
+//   var imageInfo = ImageApi.getImageInfo($(this).attr("id"),$(this).attr("src"),"");
+//   imageInfos.push(imageInfo);
+// });
+//
+// if(imageInfos.length>0 && projectObj.PictureId != imageInfos[0].ItemId){
+//   AjaxApi.fastUploadImages(imageInfos,projectObj.Id,function(ret){});
+//   projectObj.PictureId =  imageInfos[0].ItemId;
+//   //alert(projectObj.PictureId);
+// }
+
+
+
+function preUsermageUrl(datalist)
+{
+  var imageIdx = 3;
+    for (var i = 0; i < datalist.length; i++) {
+      var item = datalist[i];
+      if(item[imageIdx] && item[imageIdx]!=""){
+        item[imageIdx] = ImageApi.getGlobleImageUrl(item[0],item[imageIdx]);
+      }else{
+        item[imageIdx]="../image/user.jpg";
+      }
+    }
+}
+
+function loadProjectUsers(){
+    AjaxApi.query("query_1004",{"ProjectId":projectObj.Id},function(data){
+      var datalist = data.list;
+      if(datalist){
+        preUsermageUrl(datalist);
+        var tplData = {
+          "list" : datalist
+        };
+        var html = template("projectUsersTpl", tplData);
+        $("#projectUsersList").html(html);
+      }
+    });
+}
+
+function inviteUserPhone(){
+  dialog.prompt({
+        title:"请输入手机号",
+        text:'',
+        buttons:['取消','确定']
+    },function(ret){
+        if(ret.buttonIndex == 2){
+            var phone = ret.text;
+            if(phone == TServerInfo.getUserId()){
+              api.toast({
+                msg : '不能添加自己',
+                duration : 2000,
+                location : 'bottom'
+              });
+              return;
+            }
+
+            AjaxApi.rest("queryEntities","SysUser",{"UserName":phone},function(data){
+                if(data && data.length>0){
+                  var userobj = data[0];
+                  sendJoinProjectReq(userobj);
+                }else{
+                  api.toast({
+                    msg : '用户不存在',
+                    duration : 2000,
+                    location : 'bottom'
+                  });
+                }
+              });
+        }
+    });
+}
+
+function sendJoinProjectReq(userobj){
+  preAddUserToList(userobj);
+
+  var guid = GetUuid();
+  AjaxApi.rest("createEntity","ProjectJoinRequest",{"Id":guid,"ProjectId":projectId,"JoinUserId":userobj.Id,
+  "ProjectUserId":TServerInfo.getUserId(),"Msg":"","ReqKind":1},function(data){
+    api.toast({
+      msg : '已发送',
+      duration : 2000,
+      location : 'bottom'
+    });
+  },{"noTips":true});
+}
+
+function preAddUserToList(userobj){
+  var datalist = [[userobj.Id,userobj.UserName,userobj.RealName,userobj.PictureId,'2']];
+  preUsermageUrl(datalist);
+  var tplData = {
+    "list" : datalist
+  };
+  var html = template("projectUsersTpl", tplData);
+  $("#projectUsersList").append(html);
+}
+
+function kickUser(userId){
+  api.confirm({
+      title: '提示',
+      msg: '确定移出项目',
+      buttons: ['确定', '取消']
+    }, function(ret, err) {
+      var index = ret.buttonIndex;
+      if(index == 1){
+         AjaxApi.exec("query_9001",{"ProjectId":projectId,"UserId":userId},function(data){
+            $("#"+userId).remove();
+         });
+      }
+    });
+
+    //projectId userId
+}
+
+var islocating = false;
+function getLocation(){
+  if(islocating)
+     return;
+
+  islocating = true;
+  $("#locicon").addClass("fa-spin");
+
+ execAMapLBS(function(aMapLBS){
+   aMapLBS.singleLocation({
+       timeout: 10
+   }, function(ret, err) {
+       if (ret.status) {
+           projectObj.Lon = ret.lon;
+           projectObj.Lat = ret.lat;
+
+           aMapLBS.singleAddress({
+             timeout: 10
+             }, function(ret, err) {
+                 islocating = false;
+                 $("#locicon").removeClass("fa-spin");
+
+                 if (ret.status) {
+                     projectObj.Address = ret.address.formattedAddress;
+                     $("#Address").html(ret.address.formattedAddress)
+                 }else{
+                   api.toast({
+                     msg : '定位失败',
+                     duration : 2000,
+                     location : 'bottom'
+                   });
+                 }
+             });
+       }else {
+         islocating = false;
+         $("#locicon").removeClass("fa-spin");
+
+         api.toast({
+           msg : '定位失败',
+           duration : 2000,
+           location : 'bottom'
+         });
+       }
+   });
+ });
+}
+
+
+
+function openBpmNodes(processCode,processName){
+  if(api.pageParam.projectId && api.pageParam.projectId!=""){
+    api.openWin({
+                  name: "app_bpmprocesses",
+                  url: "../bpmprocesses.html",
+                  pageParam: {
+                      isFrame: false,
+                      projectId:api.pageParam.projectId,
+                      processCode:processCode,
+                      processName:processName
+                  },
+                  bgColor: '#FFFFFF',
+                  slidBackEnabled: false,
+                  vScrollBarEnabled:false,
+                  hScrollBarEnabled:false,
+                  delay: 0
+              }
+      );
+  }else{
+    api.toast({
+        msg : "必须先创建项目!",
+        duration : 2000,
+        location : 'bottom'
+      });
+      return;
+  }
+}
+
+
+function signinsetting(){
+  if(api.pageParam.projectId && api.pageParam.projectId!=""){
+    api.openWin({
+                  name: "app_signinsetting",
+                  url: "../signinsetting.html",
+                  pageParam: {
+                      isFrame: false,
+                      projectId:api.pageParam.projectId
+                  },
+                  bgColor: '#FFFFFF',
+                  slidBackEnabled: false,
+                  vScrollBarEnabled:false,
+                  hScrollBarEnabled:false,
+                  delay: 0
+              }
+      );
+  }else{
+    api.toast({
+        msg : "必须先创建项目!",
+        duration : 2000,
+        location : 'bottom'
+      });
+      return;
+  }
+}
+
+function expensecategorysetting(){
+  if(api.pageParam.projectId && api.pageParam.projectId!=""){
+    api.openWin({
+                  name: "expensecategorycurd",
+                  url: "expensecategorycurd.html",
+                  pageParam: {
+                      isFrame: false,
+                      projectId:api.pageParam.projectId
+                  },
+                  bgColor: '#FFFFFF',
+                  slidBackEnabled: false,
+                  vScrollBarEnabled:false,
+                  hScrollBarEnabled:false,
+                  delay: 0
+              }
+      );
+  }else{
+    api.toast({
+        msg : "必须先创建项目!",
+        duration : 2000,
+        location : 'bottom'
+      });
+      return;
+  }
+
+}
+</script>
+</html>

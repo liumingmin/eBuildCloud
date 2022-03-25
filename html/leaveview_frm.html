@@ -1,0 +1,244 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,aItemress=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../css/font-awesome/css/font-awesome.min.css" />
+    <style>
+    .image-item {
+        position: relative;
+        height: 5.3rem;
+        overflow: hidden;
+        background-color: #f0f0f0;
+    }
+    .image-item img {
+        display: block;
+        margin: 0 auto;
+        width: auto;
+        height: 100%;
+    }
+    .image-item .delete-btn {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 28px;
+        height: 28px;
+        background-color: rgba(0,0,0,0.7);
+        margin-left: -14px;
+        margin-top: -14px;
+        color: #ffffff;
+        text-align: center;
+        border-radius: 50%;
+    }
+    </style>
+</head>
+<body>
+  <section class="aui-content-padded">
+  <ul class="aui-list aui-form-list">
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                请假类型
+            </div>
+            <div class="aui-list-item-input">
+              <input id="Kind" placeholder="" type="text" readonly>
+            </div>
+
+        </div>
+    </li>
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                开始时间
+            </div>
+            <div class="aui-list-item-input">
+                  <input id="StartTime" placeholder="" type="text" readonly>
+            </div>
+
+        </div>
+    </li>
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                结束时间
+            </div>
+            <div class="aui-list-item-input">
+                  <input id="EndTime" placeholder="" type="text" readonly>
+            </div>
+
+        </div>
+    </li>
+  </ul>
+  </section>
+  <section class="aui-content-padded">
+      <textarea id="Reseaon" style="height:8em;overflow-y:scroll;background-color:#ffffff;" placeholder="请假事由" readonly></textarea>
+  </section>
+
+
+    <section  class="aui-content-padded">
+      <div id="noticeImageContent"  class="aui-row aui-row-padded">
+      </div>
+    </section>
+
+    <script id="noticeImageTpl" type="text/html">
+
+        {{each list}}
+
+        <div  class="aui-col-xs-4 image-item" onclick="ImageApi.openImageBrowser(['{{$value[1]}}']);">
+            <image src="{{$value[1]}}" class="notes-image"   />
+        </div>
+
+        {{/each}}
+    </script>
+
+    <p class="aui-margin-l-15 aui-margin-t-15">审批流程 </p>
+      <section id="processNodeContent" class="aui-content-padded">
+      </section>
+
+      <script id="instanceNodeTpl" type="text/html">
+
+        <div style="width:50px;display:inline-block;vertical-align: top;color:green" class="aui-text-center">
+          <span class="fa-stack fa-lg " style="">
+            <i class="fa fa-square-o fa-stack-2x"></i>
+            <i class="fa fa-check  fa-stack-1x"></i>
+          </span>
+
+          <div class="aui-text-center aui-font-size-12" >开始</div>
+        </div>
+
+          {{each list}}
+            <div style="width:30px;display:inline-block;vertical-align: top;"  class="aui-text-center">
+              <i class="fa fa-arrow-right fa-2x " style="-webkit-transform:scale(1,0.5);  {{if $value[6] ==1 || $value[7] ==1}} color:green {{else}} color:#969696 {{/if}} "></i>
+            </div>
+
+            <div style="width:50px;display:inline-block;vertical-align: top;{{if $value[7] ==1}} color:#03a9f4 {{else if $value[6] ==1}}color:green {{else}} color:#969696{{/if}} "
+            class="aui-text-center"
+                 >
+
+              <span class="fa-stack fa-lg " >
+                <i class="fa fa-square-o fa-stack-2x"></i>
+                <i class="fa {{if $value[7] ==1}} fa-flag {{else if $value[6] ==1}} fa-check {{/if}}  fa-stack-1x"></i>
+              </span>
+
+              <div class="aui-text-center aui-font-size-12" >{{$value[4]}}</div>
+            </div>
+          {{/each}}
+      </script>
+
+<section class="aui-content-padded" id="approvalPanel" style="display:none">
+    <ul  class="aui-list aui-media-list">
+      <li class="aui-list-item aui-list-item-middle">
+        <div class="aui-row aui-list-item-text aui-font-size-12 aui-padded-t-10 aui-padded-r-15" >
+          <div class="aui-col-xs-2 aui-text-left"></div>
+          <div class="aui-col-xs-4 aui-text-left">
+             <label><input class="aui-radio" type="radio" name="approval" value="true" checked> 同意</label>
+          </div>
+          <div class="aui-col-xs-4 aui-text-right">
+            <label><input class="aui-radio" type="radio" name="approval"  value="false"> 不同意</label>
+          </div>
+          <div class="aui-col-xs-2 aui-text-right"></div>
+        </div>
+       </li>
+       <li class="aui-list-item aui-list-item-middle">
+         <textarea id="procMsg" placeholder="备注"></textarea>
+         </li>
+      </ul>
+    </div>
+</section>
+
+</body>
+<script type="text/javascript" src="../script/api.js" ></script>
+<script type="text/javascript" src="../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../script/common.js'></script>
+<script type='text/javascript' src='../script/queryapi.js'></script>
+<script type='text/javascript' src='../script/template.js'></script>
+<script type="text/javascript" src="../script/imageapi.js"></script>
+<script type="text/javascript" src="../script/aui-tab.js"></script>
+<script type="text/javascript">
+var prNameMap={0:"事假",1:"年假",2:"病假"};
+    apiready = function(){
+        api.parseTapmode();
+
+
+        if(api.pageParam.leaveId && api.pageParam.leaveId!=""){
+            loadEntity(api.pageParam.leaveId);
+            loadImages(api.pageParam.leaveId);
+            renderInstanceNodes("query_1143",api.pageParam.leaveId);
+        }
+
+        if(api.pageParam.approvalStatus){
+           $("#approvalPanel").css("display","block");
+        }
+    }
+
+    function loadEntity(id){
+      AjaxApi.rest("retrievEntity","OaAppLeave",id,function(data){
+            $("#Kind").val(prNameMap[data.Kind]);
+            $("#Reseaon").val(data.Reseaon);
+            $("#StartTime").val(data.StartTime.sliceWith(gMinuteTimeSuffix));
+            $("#EndTime").val(data.EndTime.sliceWith(gMinuteTimeSuffix));
+        });
+    }
+
+    function preImageUrl(datalist)
+    {
+      var picIndex = 1;
+        for (var i = 0; i < datalist.length; i++) {
+          var item = datalist[i];
+          if(item[picIndex] && item[picIndex]!=""){
+            item[picIndex] = ImageApi.getImageUrl(item[0],item[picIndex]);
+          }else{
+            item[picIndex]="image/project.jpg";
+          }
+        }
+    }
+
+    function loadImages(ownerId){
+      AjaxApi.query("query_1006",{"OwnerId":ownerId},function(data){
+          var datalist = data.list;
+          if(datalist&& datalist.length>0){
+            preImageUrl(datalist);
+            var tplData = {
+              "list" : datalist
+            };
+            var html = template("noticeImageTpl", tplData);
+            $("#noticeImageContent").html(html);
+
+          }
+        });
+    }
+
+    function saveSuccess(){
+      try{
+      api.execScript({
+        name: 'leaveview_win',
+        script: 'saveSuccess()'
+       });
+      }catch(e){}
+    }
+
+    function commit(){
+      var accept=$("input[name='approval']:checked").val();
+      var msg =$("#procMsg").val();
+      if (accept=="true") {
+        AjaxApi.query("query_1144",{"LeaveId":api.pageParam.leaveId},function(data){
+            var datalist = data.list;
+            if(datalist&& datalist.length>0){
+                var item = datalist[0];
+                AjaxApi.exec("query_9111,query_9112,query_9114",{"NodeId":item[0],"LeaveId":api.pageParam.leaveId,"OrderNo":item[1],"Msg":msg},function(){
+                  saveSuccess();
+                });
+            }
+          });
+      }else {
+        AjaxApi.rest("updateEntity","OaAppLeave",{"Id":api.pageParam.leaveId,"Status":3},function(data){
+            saveSuccess();
+        },{"DataUpdateColumn":"Status","RelateModels":"OaAppLeaveNode","noTips":true});
+      }
+    }
+
+</script>
+</html>

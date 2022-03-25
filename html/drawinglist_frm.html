@@ -1,0 +1,371 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../css/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="../css/aui-pull-refresh.css" />
+    <style type="text/css">
+    .am-with-fixed-tab {
+      padding-top: 2em;
+    }
+    </style>
+</head>
+<body class="am-with-fixed-tab">
+  <div id="header" class="am-header-fixed" style="background-color:#f5f5f5">
+    <div class="aui-searchbar aui-padded-l-15 aui-padded-r-15" id="search">
+      <i class="fa fa-home fa-2x aui-inline " style="color:#0092FD" onclick="cancelSearch()"></i>
+      <div class="aui-searchbar-input aui-border-radius" tapmode>
+          <i class="aui-iconfont aui-icon-search"></i>
+          <form action="javascript:search();">
+              <input type="search" placeholder="请输入搜索内容" id="search-input">
+          </form>
+      </div>
+      <div class="aui-searchbar-cancel" tapmod onclick="search()">搜索</div>
+    </div>
+
+
+  </div>
+
+    <section class="aui-refresh-content">
+
+        <ul id="docContent" class="aui-list aui-media-list" style="background-color:#f5f5f5">
+
+<br/>  <br/><br/><br/><br/><br/><br/>  <br/><br/><br/><br/><br/>
+        </ul>
+
+      </section>
+
+
+    <script id="docTpl" type="text/html">
+      <li id="preFolder" class="aui-list-item aui-list-item-middle" style="background-color:#ffffff;" onclick=openPLink()>
+          <div class="aui-media-list-item-inner">
+            <div class="aui-list-item-label-icon">
+                <i class="fa fa-folder-open-o fa-2x aui-inline" style="color:#FFE68C"></i>
+            </div>
+
+              <div class="aui-list-item-inner">
+                  <div class="aui-list-item-text">
+                       返回上级
+
+                  </div>
+              </div>
+          </div>
+      </li>
+
+        {{each list}}
+        <li class="aui-list-item aui-list-item-middle" style="background-color:#ffffff;"
+        relativePath='{{$value["RelativePath"]}}' fileName='{{$value["Name"]}}' onclick=openLink({{$value["Kind"]}},this)>
+            <div class="aui-media-list-item-inner">
+              <div class="aui-list-item-label-icon">
+                    {{$value["Icon"]}}
+              </div>
+                <div class="aui-list-item-inner">
+                    <div class="aui-list-item-text">
+                       {{$value["Name"]}}
+                    </div>
+
+
+                </div>
+                {{if $value["Kind"] == 2}}
+                <div class="aui-pull-right  aui-text-left aui-font-size-12" style="width:60px !important">
+                    {{$value["Size"] |formatFileSize}}
+                </div>
+                {{/if}}
+            </div>
+        </li>
+
+        {{/each}}
+    </script>
+
+    <!-- {{if $value[6] ==0}}{{/if}} -->
+</body>
+<script type="text/javascript" src="../script/api.js" ></script>
+<script type="text/javascript" src="../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../script/common.js'></script>
+<script type='text/javascript' src='../script/queryapi.js'></script>
+<script type='text/javascript' src='../script/template.js'></script>
+<script type="text/javascript" src="../script/imageapi.js"></script>
+<script type="text/javascript" src="../script/aui-pull-refresh.js"></script>
+<script type="text/javascript" src="../script/aui-scroll.js" ></script>
+<script type="text/javascript">
+
+var fileextMap = {".xls":'<i class="fa fa-file-excel-o fa-2x" style="color:#1F7246"></i>',
+                  ".xlsx":'<i class="fa fa-file-excel-o fa-2x" style="color:#1F7246"></i>',
+                  ".doc":'<i class="fa fa-file-word-o fa-2x" style="color:#2A5699"></i>',
+                  ".docx":'<i class="fa fa-file-word-o fa-2x" style="color:#2A5699"></i>',
+                  ".ppt":'<i class="fa fa-file-powerpoint-o fa-2x" style="color:#D04626"></i>',
+                  ".pptx":'<i class="fa fa-file-powerpoint-o fa-2x" style="color:#D04626"></i>',
+                  ".pdf":'<i class="fa fa-file-pdf-o fa-2x" style="color:#B80607"></i>',
+                  ".png":'<i class="fa fa-file-image-o fa-2x" style="color:#0092FD"></i>',
+                  ".jpg":'<i class="fa fa-file-image-o fa-2x" style="color:#0092FD"></i>',
+                  ".bmp":'<i class="fa fa-file-image-o fa-2x" style="color:#0092FD"></i>',
+                  ".gif":'<i class="fa fa-file-image-o fa-2x" style="color:#0092FD"></i>',
+                  };
+var pRelativePath="";
+var currRelativePath="";
+
+template.config("escape", false);
+
+template.helper('formatFileSize', function(fsize) {
+   var kb = 1024.0;
+   var mb = 1024*1024.0;
+  if(fsize>mb){
+    return (fsize/mb).toFixed(2)+"MB";
+  }else if(fsize>kb){
+    return (fsize/kb).toFixed(2)+"KB";
+  }else{
+    return fsize+"B";
+  }
+});
+
+apiready = function () {
+
+  var height = $("#header").height();
+  $('body').css('padding-top', height);
+
+  initPull();
+  loadDocFiles("");
+}
+
+//create callback
+function loadData(){
+
+}
+
+function showMsg(msg){
+  api.toast({
+      msg : msg,
+      duration : 1000,
+      location : 'bottom'
+    });
+}
+
+function initPull(){
+  var pullRefresh = new auiPullToRefresh({
+    container: document.querySelector('.aui-refresh-content'),
+    triggerDistance: 100
+},function(ret){
+    if(ret.status=="success"){
+      loadDocFiles(currRelativePath);
+      setTimeout(function(){
+        pullRefresh.cancelLoading(); //刷新成功后调用此方法隐藏
+      },1500);
+    }
+})
+}
+
+function preIconProc(datalist){
+    for(var i=0;i<datalist.length;++i){
+      var item = datalist[i];
+       item["Icon"] = "";
+      if(item["Kind"] == 1){
+        item["Icon"] = '<i class="fa fa-folder fa-2x" style="color:#FFE68C"></i> ';
+      }else if(item["Kind"] == 2){
+        item["Icon"] = '<i class="fa fa-file-o fa-2x" style="color:#ADADAD"></i> ';
+        for(var k in fileextMap){
+            if(item["Name"].endWith(k,true)){
+               item["Icon"] =fileextMap[k];
+               break;
+            }
+        }
+      }
+    }
+}
+
+ function getdocfile(inparams,callback){
+  var postparams = $.extend({"ProjectId":TServerInfo.getProjectId(),"docModule":"drawingDoc","__secret":"notoken"},inparams);
+  api.ajax({
+    url:'http://'+TServerInfo.getHostUrl()+"/oa/document/listApp",
+    method:'post',
+    cache: false,
+    timeout: 3,
+    dataType: 'json',
+    data:{
+      values:postparams
+    }
+  },function(ret,err){
+    if (ret) {
+      if(ret.Code == 0){
+          callback(JSON.parse(ret.Content));
+      }else{
+        api.toast({
+          msg : ('错误码：'+ret.Code+'；错误信息：'
+          +ret.Msg),
+          duration : 2000,
+          location : 'bottom'
+        });
+      }
+    }else{
+      api.toast({
+          msg : ('错误码：'+err.code+';错误信息：'
+        +err.msg+';网络状态码：'+err.statusCode),
+        duration : 2000,
+        location : 'bottom'
+        });
+    }
+  });
+}
+
+function loadDocFiles(relativePath){
+    getdocfile({"RelativePath":relativePath},function(data){
+
+      pRelativePath = data.ppath;
+      currRelativePath = data.path;
+      var datalist = data.list;
+      if(datalist){
+        preIconProc(datalist);
+        var tplData = {
+          "list" : datalist
+        };
+        var html = template("docTpl", tplData);
+
+        $("#docContent").html(html);
+      }else{
+        $("#docContent").html(gWhitespaceHtml);
+      }
+
+      if(currRelativePath==""){
+          $("#preFolder").css("display","none");
+      }
+      //$("#globePath").html(currRelativePath);
+    });
+}
+
+function openPLink(){
+   loadDocFiles(pRelativePath);
+}
+
+function openLink(kind,elem){
+   var relativePath = $(elem).attr("relativePath");
+   var name =  $(elem).attr("fileName");
+   if(kind==1){
+      loadDocFiles(relativePath);
+   }else if(kind==2){
+      openDocByName(relativePath,name);
+   }
+}
+
+function openDocByName(relativePath,name){
+    if(relativePath=="") relativePath="/";
+    var url = 'http://'+TServerInfo.getHostUrl()+"/docs/"+TServerInfo.getProjectId()+"/drawingDoc"+relativePath+ "/"+name;
+    //alert(url);
+    openDoc(url);
+}
+
+function openDoc(url){
+    if(url.endWith(".pdf",true)){
+        openPdf(url);
+    }else if(url.endWith(".png",true) || url.endWith(".jpg",true) || url.endWith(".bmp",true)|| url.endWith(".gif",true)){
+        ImageApi.openImageBrowser([url]);
+    }else{
+      var filename = url.substring(url.lastIndexOf('/') + 1);
+      var dstUrl = api.cacheDir+"/"+filename;
+
+      api.download({
+          url: url,
+          savePath: dstUrl,
+          report: false,
+          cache: true,
+          allowResume: true
+      },function(ret, err){
+          if(ret.state == 1){
+            var docInteraction = api.require('docInteraction');
+            docInteraction.open({
+                path: dstUrl
+            }, function(ret, err) {
+
+            });
+          }else{
+
+          }
+      });
+
+
+    }
+}
+
+
+function openPdf(url){
+  var pdfReader = api.require('pdfReader');
+  pdfReader.open({
+      path: url,
+      hidden:{
+        print: true,
+        export: true,
+        email: true
+      }
+  });
+}
+
+function search(){
+  var queryText = $("#search-input").val();
+  searchdocfile({"queryText":queryText},function(data){
+
+    //pRelativePath = data.ppath;
+    //currRelativePath = data.path;
+    var datalist = data.list;
+    if(datalist){
+      preIconProc(datalist);
+      var tplData = {
+        "list" : datalist
+      };
+      var html = template("docTpl", tplData);
+
+      $("#docContent").html(html);
+    }else{
+      $("#docContent").html(gWhitespaceHtml);
+    }
+
+    // if(currRelativePath==""){
+    //     $("#preFolder").css("display","none");
+    // }
+    //$("#globePath").html(currRelativePath);
+  });
+}
+
+function cancelSearch(){
+  loadDocFiles("");
+   $("#search-input").val("");
+}
+
+function searchdocfile(inparams,callback){
+ var postparams = $.extend({"ProjectId":TServerInfo.getProjectId(),"docModule":"drawingDoc","__secret":"notoken"},inparams);
+ api.ajax({
+   url:'http://'+TServerInfo.getHostUrl()+"/oa/document/queryApp",
+   method:'post',
+   cache: false,
+   timeout: 3,
+   dataType: 'json',
+   data:{
+     values:postparams
+   }
+ },function(ret,err){
+   if (ret) {
+     if(ret.Code == 0){
+         callback(JSON.parse(ret.Content));
+     }else{
+       api.toast({
+         msg : ('错误码：'+ret.Code+'；错误信息：'
+         +ret.Msg),
+         duration : 2000,
+         location : 'bottom'
+       });
+     }
+   }else{
+     api.toast({
+         msg : ('错误码：'+err.code+';错误信息：'
+       +err.msg+';网络状态码：'+err.statusCode),
+       duration : 2000,
+       location : 'bottom'
+       });
+   }
+ });
+}
+
+</script>
+</html>

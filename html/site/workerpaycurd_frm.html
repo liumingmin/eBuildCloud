@@ -1,0 +1,219 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/aui-pull-refresh.css" />
+    <style type="text/css">
+    .datehint{
+      text-align: center;
+      color: rgb(0, 128, 255);
+    }
+    </style>
+</head>
+
+<body>
+  <ul class="aui-list aui-list-in">
+    <li class="datehint">
+        &nbsp;
+    </li>
+  </ul>
+
+  <section class="aui-refresh-content">
+        <ul id="workerPayContent" class="aui-list aui-media-list">
+          <li class="aui-list-item aui-list-item-middle" style="min-height:0px">
+            <div class="aui-row aui-list-item-text aui-font-size-14 " >
+              <div class="aui-col-xs-1 aui-text-center">&nbsp;</div>
+              <div class="aui-col-xs-3 aui-text-center">工人</div>
+              <div class="aui-col-xs-3 aui-text-center">本月应发</div>
+              <div class="aui-col-xs-3 aui-text-center">本月实发</div>
+              <div class="aui-col-xs-2 aui-text-center">欠款</div>
+            </div>
+          </li>
+        </ul>
+  </section>
+
+  <script id="workerPayTitleTpl" type="text/html">
+    <li class="aui-list-item aui-list-item-middle" style="min-height:0px">
+      <div class="aui-row aui-list-item-text aui-font-size-14 " >
+        <div class="aui-col-xs-1 aui-text-center">&nbsp;</div>
+        <div class="aui-col-xs-3 aui-text-center">工人</div>
+        <div class="aui-col-xs-3 aui-text-center">本月应发</div>
+        <div class="aui-col-xs-3 aui-text-center">本月实发</div>
+        <div class="aui-col-xs-2 aui-text-center">欠款</div>
+      </div>
+    </li>
+  </script>
+
+  <script id="workerPayTpl" type="text/html">
+  		 {{each list}}
+       <li class="aui-list-item aui-list-item-middle ">
+         <div class="aui-row aui-list-item-text aui-font-size-12 " >
+           <div class="aui-col-xs-1 aui-text-center">
+             <input id="check{{$value[0]}}" type="checkbox" name="check" class="aui-checkbox aui-inline" value="{{$value[0]}}" checked>
+           </div>
+           <div class="aui-col-xs-3 aui-text-center">
+             {{$value[1]}}
+           </div>
+           <div class="aui-col-xs-3 aui-text-center">{{$value[2]}}</div>
+           <div class="aui-col-xs-3 aui-text-center">
+             <input id="input{{$value[0]}}" type="text" class="aui-input aui-text-center" onkeyup="num(this)" maxlength="6"  value="{{$value[2]}}"/>
+           </div>
+           <div class="aui-col-xs-2 aui-text-center">{{$value[3]}}</div>
+         </div>
+       </li>
+  		  {{/each}}
+
+  	</script>
+
+</body>
+
+<script type="text/javascript" src="../../script/api.js"></script>
+<script type="text/javascript" src="../../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../../script/common.js'></script>
+<script type='text/javascript' src='../../script/queryapi.js'></script>
+<script type='text/javascript' src='../../script/template.js'></script>
+<script type="text/javascript" src="../../script/aui-toast.js" ></script>
+<script type='text/javascript' src='../../script/controls.js'></script>
+<script type="text/javascript" src="../../script/bluebird.min.js" ></script>
+<script type="text/javascript" src="../../script/hammer.min.js"></script>
+<script type="text/javascript">
+var toast = new auiToast();
+apiready = function(){
+  api.parseTapmode();
+
+  if(api.pageParam.timestamp && api.pageParam.timestamp!=""){
+     loadWorkerPay(api.pageParam.timestamp);
+
+     var d = new Date();
+     d.setTime(api.pageParam.timestamp);
+     $(".datehint").text(d.getFullYear()+"-"+(d.getMonth()+1));
+  }
+}
+
+
+function loadWorkerPay(timestamp){
+  var selDate = new Date();
+  selDate.setTime(timestamp);
+  selDate.TrimDate();
+  selDate.setDate(1);
+  var startDate = selDate.getTime()/1000;
+
+  selDate.NextMonth();
+  selDate.setDate(1);
+
+  var endDate = selDate.getTime()/1000;
+
+  var param = $.extend({"StartDate":startDate+"","EndDate":endDate+""},TServerInfo.getProjUserParam());
+
+  AjaxApi.query("query_2012",param,function(data){
+    var datalist = data.list;
+    if(datalist){
+      var tplData = {
+        "list" : datalist
+      };
+
+      var html = template("workerPayTpl", tplData);
+      $("#workerPayContent").append(html);
+    }else{
+      $("#workerPayContent").append(gWhitespaceHtml);
+    }
+  });
+}
+
+function num(obj){
+    obj.value = obj.value.replace(/[^\d.]/g,""); //清除"数字"和"."以外的字符
+    obj.value = obj.value.replace(/^\./g,""); //验证第一个字符是数字
+    obj.value = obj.value.replace(/\.{2,}/g,"."); //只保留第一个, 清除多余的
+    obj.value = obj.value.replace(".","$#$").replace(/\./g,"").replace("$#$",".");
+    obj.value = obj.value.replace(/^(\-)*(\d+)\.(\d\d).*$/,'$1$2.$3'); //只能输入两个小数
+}
+
+function commit()
+{
+  enableClickOnceBtn();
+
+  toast.loading({
+        title:"正在保存...",
+        duration:2000
+    },function(ret){
+
+    });
+
+    saveWorkerPay();
+}
+
+var workerPayEntityOp = new EntityBatchOp("SiteWorkerPay","Amount");
+
+function saveWorkerPay(){
+  var entObjs = [];
+  $("input[name='check']:checked").each(function(i){
+    var workerId = $(this).val();
+    var payAmount = parseFloat($("#input"+workerId).val());
+    if(payAmount<=0){
+      return ;
+    }
+
+    var ownerId = GetUuid();
+
+    var entObj = {"Id":ownerId,
+          "UserId":TServerInfo.getUserId(),
+          "ProjectId":TServerInfo.getProjectId(),
+          "Timestamp":api.pageParam.timestamp/1000,
+          "WorkerId":workerId,
+          "Amount":payAmount,
+          "PayType":"0",
+          "Remark":"工资"
+        };
+    workerPayEntityOp.addEntity(entObj);
+    // if(iscreate){
+    //
+    // }else{
+    //   workerBonusEntityOp.updateEntity(entObj);
+    // }
+  });
+
+  AjaxApi.batchSave([workerPayEntityOp],[],
+    {"noTips":true},function(data){
+       saveSuccess();
+  });
+}
+
+function saveSuccess(){
+  api.toast({
+      msg : "提交成功!",
+      duration : 1000,
+      location : 'bottom'
+    });
+
+setTimeout(function(){reloadWorkPay();api.closeWin();},1000);
+}
+
+function enableClickOnceBtn(){
+  try{
+  api.execScript({
+    name: 'workerbonuscurd_win',
+    script: 'enableClickOnceBtn()'
+   });
+  }catch(e){}
+}
+
+function reloadWorkPay(){
+  try{
+  api.execScript({
+    name: 'workercostlist_win',
+    frameName: 'workercostlist_frm',
+    script: 'reloadWorkPay()'
+   });
+  }catch(e){}
+}
+
+</script>
+
+</html>

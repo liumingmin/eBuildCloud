@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+  <html>
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+      <title></title>
+      <link rel="stylesheet" type="text/css" href="css/app.css" />
+      <link rel="stylesheet" type="text/css" href="css/aui.css" />
+      <link rel="stylesheet" type="text/css" href="css/aui-pull-refresh.css" />
+      <link rel="stylesheet" type="text/css" href="css/font-awesome/css/font-awesome.min.css" />
+      <style>
+          body{
+
+          }
+
+          .am-with-fixed--custheader {
+            padding-top: 2.25rem;
+          }
+      </style>
+  </head>
+  <body class="am-with-fixed--custheader aui-margin-l-0">
+    <div id="header" class="am-header-fixed" >
+    <header id="aui-header" class="aui-bar aui-bar-nav aui-bar-light">
+      <a class="aui-btn aui-pull-left" tapmode onclick="closeWin()">
+          <span class="aui-iconfont aui-icon-left"></span>
+      </a>
+    <div class="aui-title" id="title"></div>
+
+    <a class="aui-btn aui-pull-right" tapmode onclick="createProcess()">
+        <span class="aui-iconfont aui-icon-plus"></span>
+    </a>
+    </header>
+</div>
+
+<section >
+<ul class="aui-list aui-form-list" id="bpmProcessContent" style="background-color:#f5f5f5">
+<br/><br/><br/><br/><br/><br/><br/><br/><br/>
+</ul>
+</section>
+
+      <script id="bpmProcessTpl" type="text/html">
+          {{each list}}
+          <li class="aui-list-item" id="li_{{$value[0]}}" style="height:40px" style="background-color:#ffffff;">
+              <div class="aui-list-item-inner">
+
+                  <div class="aui-list-item-input" onclick="editProcess('{{$value[0]}}')">
+                        {{$value[1]}}
+                  </div>
+
+                  <div class="aui-pull-right  " style="width:40px !important">
+                    <a onclick="removeNode('{{$value[0]}}')"  style="width:100%"> <i class="fa fa-close"></i> </a>
+                  </div>
+              </div>
+          </li>
+          {{/each}}
+      </script>
+  </body>
+  <script type="text/javascript" src="script/api.js" ></script>
+  <script type="text/javascript" src="css/amazeui/js/jquery.min.js"></script>
+  <script type='text/javascript' src='script/common.js'></script>
+  <script type='text/javascript' src='script/queryapi.js'></script>
+  <script type='text/javascript' src='script/template.js'></script>
+  <script type="text/javascript" src="script/imageapi.js"></script>
+  <script type="text/javascript" src="script/aui-dialog.js" ></script>
+  <script type="text/javascript" src="script/aui-toast.js" ></script>
+  <script type="text/javascript">
+  function closeWin(){
+      api.closeWin({
+      });
+  }
+
+var toast = new auiToast();
+
+      apiready = function(){
+        var header = $api.byId('aui-header');
+        $api.fixStatusBar(header);
+
+        $("#title").html(api.pageParam.processName+"流程");
+
+        var height = $("#header").height();
+        $('body').css('padding-top', height);
+
+          loadBpmProcesses(api.pageParam.projectId,api.pageParam.processCode);
+      };
+
+      function loadData(){
+        loadBpmProcesses(api.pageParam.projectId,api.pageParam.processCode);
+      }
+
+      function loadBpmProcesses(projectId,processCode){
+        AjaxApi.query("query_1013",{"ProjectId":projectId,"ProcessCode":processCode},function(data){
+
+          if(data.list){
+            var datalist = data.list;
+            var tplData = {
+              "list" : datalist
+            };
+            var html = template("bpmProcessTpl", tplData);
+            $("#bpmProcessContent").html(html);
+
+          }else{
+            $("#bpmProcessContent").html(gWhitespaceHtml);
+          }
+        });
+      }
+
+      function removeNode(id){
+        api.confirm({
+            title: '提示',
+            msg: '确定删除流程',
+            buttons: ['确定', '取消']
+          }, function(ret, err) {
+            var index = ret.buttonIndex;
+            if(index == 1){
+               AjaxApi.exec("query_9051,query_9052,query_9053",{"ProcessId":id},function(data){
+                  $("#li_"+id).remove();
+               });
+            }
+          });
+      }
+
+      function editProcess(id){
+        api.openWin({
+                      name: "app_bpmnodes",
+                      url: "bpmnodes.html",
+                      pageParam: {
+                          isFrame: false,
+                          projectId:api.pageParam.projectId,
+                          processCode:api.pageParam.processCode,
+                          processId:id,
+                          processName:api.pageParam.processName
+                      },
+                      bgColor: '#FFFFFF',
+                      slidBackEnabled: false,
+                      vScrollBarEnabled:false,
+                      hScrollBarEnabled:false,
+                      delay: 0
+                  }
+          );
+      }
+
+      function createProcess(){
+        api.openWin({
+                      name: "app_bpmnodes",
+                      url: "bpmnodes.html",
+                      pageParam: {
+                          isFrame: false,
+                          projectId:api.pageParam.projectId,
+                          processCode:api.pageParam.processCode,
+                          processName:api.pageParam.processName
+                      },
+                      bgColor: '#FFFFFF',
+                      slidBackEnabled: false,
+                      vScrollBarEnabled:false,
+                      hScrollBarEnabled:false,
+                      delay: 0
+                  }
+          );
+      }
+
+  </script>
+  </html>

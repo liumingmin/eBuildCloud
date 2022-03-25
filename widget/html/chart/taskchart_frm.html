@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <title>title</title>
+		<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/font-awesome/css/font-awesome.min.css" />
+    <style>
+    	body{
+
+    	}
+    </style>
+</head>
+<body>
+	<section class="aui-content-padded">
+		<ul class="aui-list aui-form-list">
+			<li class="aui-list-item">
+					<div class="aui-list-item-inner">
+							<div class="aui-list-item-label">
+									开始日期
+							</div>
+							<div class="aui-list-item-input">
+										<input id="StartDate" placeholder="" type="text" readonly>
+							</div>
+							<div class="aui-pull-right  " style="width:40px !important">
+									<a onclick="datepick('StartDate')"  style="width:100%"> &gt;&gt;&nbsp;</a>
+							</div>
+
+					</div>
+			</li>
+		<li class="aui-list-item">
+				<div class="aui-list-item-inner">
+						<div class="aui-list-item-label">
+								截止日期
+						</div>
+						<div class="aui-list-item-input">
+									<input id="EndDate" placeholder="" type="text" readonly>
+						</div>
+						<div class="aui-pull-right  " style="width:40px !important">
+								<a onclick="datepick('EndDate')"  style="width:100%"> &gt;&gt;&nbsp;</a>
+						</div>
+
+				</div>
+		</li>
+		</ul>
+	</section>
+	<div id="main" style="height:20em;width:100%"></div>
+</body>
+<script type='text/javascript' src='../../script/api2.js'></script>
+<script type="text/javascript" src="../../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../../script/common.js'></script>
+<script type='text/javascript' src='../../script/echarts-all.js'></script>
+<script type='text/javascript' src='../../script/queryapi.js'></script>
+<script type="text/javascript">
+
+	var myChart;
+	var lengendData = [];
+	var chartdata1 = [];
+	var chartdata2 = [];
+	var chartdata3 = [];
+
+	apiready = function(){
+
+		initPage();
+	}
+
+	function initPage(){
+		//$("#main").css("width",)
+		myChart = echarts.init($("#main")[0]);
+		myChart.resize();
+	  myChart.on("click", onChartClick);
+
+		var now =new Date();
+		$("#EndDate").val(now.Format("yyyy-MM-dd"));
+		now.setFullYear(now.getFullYear()-1);
+	  $("#StartDate").val(now.Format("yyyy-MM-dd"));
+
+		chartData();
+	}
+
+	function loadchartdata(chartlengend,chartdata1,chartdata2,chartdata3){
+		option = {
+				xAxis: {
+		        type: 'category',
+		        data: chartlengend
+		    },
+		    yAxis: {
+		        type: 'value'
+		    },
+				legend: {
+	        data:['总任务','已完成','未完成']
+	    },
+		    series : [
+					{
+							name:'总任务',
+							type: 'bar',
+							data:chartdata1
+					},
+		        {
+							  name:'已完成',
+		            type: 'bar',
+		            data:chartdata2
+		        },
+						{
+							  name:'未完成',
+		            type: 'bar',
+		            data:chartdata3
+		        }
+		    ]
+		};
+
+    myChart.clear();
+		myChart.hideLoading()
+		myChart.setOption(option);
+	}
+
+	function chartData(){
+		var param = $.extend({"StartDate":$("#StartDate").val(),"EndDate":$("#EndDate").val()},api.pageParam.projUserParam);
+		AjaxApi.query("query_3001",param,function(data2){
+    			if(data2 && data2.list && data2.list.length){
+						lengendData=[];
+						chartdata1=[];
+						chartdata2=[];
+						chartdata3=[];
+    				for(var i=0;i<data2.list.length;i++){
+    					var item = data2.list[i];
+							lengendData.push(item[0]);
+    					chartdata1.push(item[1]);
+							chartdata2.push(item[2]);
+							chartdata3.push(item[3]);
+    				}
+
+    				loadchartdata(lengendData,chartdata1,chartdata2,chartdata3);
+    			}else{
+    				loadchartdata([],[],[],[]);
+    			}
+    		});
+	}
+
+	function onChartClick(param){
+			var serise = param.seriesIndex;
+			var dataindex =param.dataIndex;
+
+			//alert(lengendData[dataindex]);
+			var pageParam =  {
+					isFrame: false,
+					"StartDate":lengendData[dataindex],
+			};
+
+			switch (serise) {
+				case 0: pageParam["Total"]=" "; break;
+				case 1: pageParam["Done"]=" ";break;
+				case 2: pageParam["Todo"]=" ";break;
+				default:
+			}
+
+			api.openWin({
+										name: "taskdetails_win",
+										url: "taskdetails_win.html",
+										pageParam:pageParam,
+										bgColor: '#FFFFFF',
+										slidBackEnabled: false,
+										vScrollBarEnabled:false,
+										hScrollBarEnabled:false,
+										delay: 0
+								}
+				);
+	}
+
+
+	function datepick(nodeid){
+	  api.openPicker({
+	      type: 'date',
+	      date: $("#"+nodeid).val(),
+	      title: '选择日期'
+	  }, function(ret, err) {
+	      if (ret) {
+	        var monthstr = ret.month+"";
+	        var daystr = ret.day+"";
+	          $("#"+nodeid).val(ret.year+"-"+monthstr.PadLeft(2,0)+"-"+daystr.PadLeft(2,0));
+	      }
+
+				chartData();
+	  });
+	}
+</script>
+</html>

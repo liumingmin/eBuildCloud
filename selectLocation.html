@@ -1,0 +1,231 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>Hello APP</title>
+    <link rel="stylesheet" type="text/css" href="css/app.css" />
+    <link rel="stylesheet" type="text/css" href="css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="css/aui-pull-refresh.css" />
+    <link rel="stylesheet" type="text/css" href="css/font-awesome/css/font-awesome.min.css" />
+	<style>
+  .am-with-fixed--custheader {
+    padding-top: 2.25rem;
+  }
+	</style>
+</head>
+<body>
+
+  <div id="header" class="am-header-fixed" >
+  <header id="aui-header" class="aui-bar aui-bar-nav aui-bar-light">
+    <a class="aui-btn aui-pull-left" tapmode onclick="closeWin()">
+        <span class="aui-iconfont aui-icon-left"></span>
+    </a>
+  <div class="aui-title" id="title">位置选择</div>
+
+  <a class="aui-btn aui-pull-right" tapmode onclick="commit()">
+      <span class="aui-iconfont aui-icon-correct"></span>
+  </a>
+  </header>
+
+  <div class="aui-searchbar" id="search">
+      <div class="aui-searchbar-input aui-border-radius" tapmode onclick="openSearchWin();">
+          <i class="aui-iconfont aui-icon-search"></i>
+          <form >
+              <input type="search" placeholder="" id="locsearchname" readonly>
+          </form>
+      </div>
+  </div>
+</div>
+
+<section >
+
+</section>
+
+
+</body>
+<script type="text/javascript" src="script/api.js" ></script>
+<script type="text/javascript" src="css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='script/common.js'></script>
+<script type="text/javascript" src="script/aui-toast.js" ></script>
+<script type="text/javascript">
+function closeWin(){
+  var aMap = api.require('aMap');
+  aMap.close();
+
+    api.closeWin({
+    });
+}
+
+var selectedLon=0;
+var selectedLat=0;
+var selectedAddress="";
+
+var toast = new auiToast();
+    apiready = function(){
+      var header = $api.byId('aui-header');
+      $api.fixStatusBar(header);
+
+      var height = $("#header").height();
+      $('body').css('padding-top', height);
+
+      selectedLon = api.pageParam.Lon;
+      selectedLat = api.pageParam.Lat;
+      selectedAddress = api.pageParam.Address;
+
+      setTimeout(openAMap,400);
+    };
+
+var searchAddress = "";
+function openSearchWin(){
+  api.openWin({
+               name: "app_searchLocation",
+               url: "searchLocation.html",
+               pageParam: {
+                   isFrame: false,
+                   srcWinName:"app_selectlocation",
+                   srcFrameName:"",
+                   Address:searchAddress
+               },
+               bgColor: '#FFFFFF',
+               slidBackEnabled: false,
+               vScrollBarEnabled:false,
+               hScrollBarEnabled:false,
+               delay: 0
+           }
+   );
+}
+
+function setSearchLocation(lon,lat,address){
+  searchAddress = address;
+  var aMap = api.require('aMap');
+  aMap.setCenter({
+      coords: {
+          lon: lon,
+          lat: lat
+      },
+      animation: true
+  });
+  setLocationInfo(lon,lat);
+  addAnotation(lon,lat,address);
+
+}
+
+function openAMap(){
+  var header = $api.byId('header');
+  var headerPos = $api.offset(header);
+  var body_h = $api.offset($api.dom('body')).h;
+
+  var aMap = api.require('aMap');
+  aMap.open({
+      rect: {
+        x: 0,
+        y: headerPos.h,
+        w: 'auto',
+        h: 'auto'
+      },
+      showUserLocation: true,
+      zoomLevel: 13,
+      center: {
+          lon: selectedLon>0.00001?selectedLon:getCurrLocationLon(),
+          lat: selectedLat>0.00001?selectedLat:getCurrLocationLat()
+      },
+      fixed: true
+  }, function(ret, err) {
+      if (ret.status) {
+        if(selectedLon<0.00001 && selectedLat < 0.00001){
+          aMap.getLocation(function(ret2, err) {
+            if (ret2.status) {
+              setStorageCurrLocation(ret2.lon,ret2.lat);
+              aMap.setCenter({
+                  coords: {
+                      lon: ret2.lon,
+                      lat: ret2.lat
+                  },
+                  animation: true
+              });
+            }
+          });
+        }else{
+          addAnotation(selectedLon,selectedLat);
+        }
+
+        aMap.addEventListener({
+            name: 'longPress'
+        }, function(ret2) {
+            if (ret2.status) {
+                setLocationInfo(ret2.lon,ret2.lat);
+                addAnotation(ret2.lon,ret2.lat);
+            }
+        });
+      }
+  });
+}
+
+function addAnotation(lon1,lat1){
+  var aMap = api.require('aMap');
+  aMap.addAnnotations({
+      annotations: [{
+          id: 1,
+          lon: lon1,
+          lat: lat1
+      }],
+      //icons: ['widget://'],
+      draggable: true,
+      timeInterval: 2.0
+  }, function(ret) {
+      if (ret.eventType == 'click') {
+          //alert(ret.id);
+          aMap.getNameFromCoords({
+              lon: lon1,
+              lat: lat1
+          }, function(ret, err) {
+              if (ret.status) {
+                  api.toast({
+                    msg : ret.address,
+                    duration : 2000,
+                    location : 'bottom'
+                  });
+              }
+          });
+
+      }
+  });
+}
+
+function setLocationInfo(lon1,lat1,address){
+var aMap = api.require('aMap');
+  selectedLon = lon1;
+  selectedLat = lat1;
+
+  if(address){
+      selectedAddress = address;
+  }else{
+    aMap.getNameFromCoords({
+        lon: lon1,
+        lat: lat1
+    }, function(ret, err) {
+        if (ret.status) {
+            selectedAddress = ret.address;
+        }
+    });
+  }
+}
+
+function commit(){
+  if(selectedLon==0 && selectedLat==0){
+    api.toast({
+      msg : "目标位置未选择,请长按地图选择目标位置",
+      duration : 2000,
+      location : 'bottom'
+    });
+    return;
+  }
+  returnSelectLocation(api.pageParam.srcWinName,api.pageParam.srcFrameName,selectedLon,selectedLat,selectedAddress);
+  closeWin();
+}
+
+
+</script>
+</html>

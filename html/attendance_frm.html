@@ -1,0 +1,334 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../css/font-awesome/css/font-awesome.min.css" />
+    <style type="text/css">
+
+    </style>
+</head>
+<body>
+
+  <section class="aui-content-padded">
+  <div id="NowDate" class="aui-text-center aui-text-success"></div>
+  </section>
+  <section class="aui-grid ">
+  <div class="aui-row">
+         <div class="aui-col-xs-4" >
+             <div class="aui-grid-label aui-text-center" style="line-height:3rem;">
+               <div id="StartDate">0000-00-00</div>
+               <div id="StartTime">00:00:00</div>
+            </div>
+
+         </div>
+         <div class="aui-col-xs-4" >
+             <div class="aui-grid-label aui-text-center" style="line-height:6rem;">
+               <img  id="txtImage1" src="../image/addImg.png" editflag="no" itemId="" style="height:6rem;margin:auto;"
+               onclick="takePhoto('txtImage1');"/>
+             </div>
+         </div>
+         <div class="aui-col-xs-4" >
+            <div class="aui-grid-label" tapmode onclick="getLocation('Start')" style="line-height:3rem;">
+             <div><i class="aui-iconfont aui-icon-map"></i></div>
+             <div><i id="StartLocicon" class="fa fa-refresh aui-margin-r-5"></i>签到</div>
+             </div>
+         </div>
+  </div>
+</section>
+
+<ul class="aui-list aui-form-list">
+  <li class="aui-list-item">
+      <div class="aui-list-item-inner">
+          <div class="aui-list-item-label">
+              签到地点
+          </div>
+          <div class="aui-list-item-input">
+
+              <textarea id="StartAddress" placeholder="" readonly="true"></textarea>
+          </div>
+      </div>
+  </li>
+</ul>
+<br/>
+<section class="aui-grid ">
+<div class="aui-row">
+       <div class="aui-col-xs-4" >
+           <div class="aui-grid-label" style="line-height:3rem;">
+             <div id="EndDate">0000-00-00</div>
+             <div id="EndTime">00:00:00</div>
+          </div>
+
+       </div>
+       <div class="aui-col-xs-4" >
+           <div class="aui-grid-label" style="line-height:6rem;">
+             <img  id="txtImage2" src="../image/addImg.png" editflag="no" itemId="" style="height:6rem;margin:auto;"
+             onclick="takePhoto('txtImage2');"/>
+           </div>
+       </div>
+       <div class="aui-col-xs-4" >
+          <div class="aui-grid-label" tapmode onclick="getLocation('End')" style="line-height:3rem;">
+           <div><i class="aui-iconfont aui-icon-map"></i></div>
+           <div><i id="EndLocicon" class="fa fa-refresh aui-margin-r-5"></i>签退</div>
+           </div>
+       </div>
+</div>
+</section>
+
+<ul class="aui-list aui-form-list">
+<li class="aui-list-item">
+    <div class="aui-list-item-inner">
+        <div class="aui-list-item-label">
+            签退地点
+        </div>
+        <div class="aui-list-item-input">
+            <textarea id="EndAddress" placeholder="" readonly="true"></textarea>
+        </div>
+    </div>
+</li>
+</ul>
+</body>
+<script type='text/javascript' src='../script/api.js'></script>
+<script type="text/javascript" src="../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../script/common.js'></script>
+<script type='text/javascript' src='../script/queryapi.js'></script>
+<script type='text/javascript' src='../script/template.js'></script>
+<script type="text/javascript" src="../script/hammer.min.js"></script>
+<script type="text/javascript" src="../script/imageapi.js"></script>
+<script type="text/javascript" src="../script/aui-toast.js" ></script>
+<script type="text/javascript" src="../script/bluebird.min.js" ></script>
+<script type='text/javascript'>
+var attendanceobj = {};
+
+var attendanceId;
+var datestr="";
+var lon=0;
+var lat=0;
+var isSign = false;
+    apiready = function(){
+        initPage();
+    }
+
+    function initPage(){
+      lon = $api.getStorage('lon');
+      lat = $api.getStorage('lat');
+
+      datestr = (new Date()).Format("yyyy-MM-dd");
+      $("#NowDate").html(datestr);
+
+      var param = $.extend({"StartDate":datestr},TServerInfo.getProjUserParam());
+      AjaxApi.query("query_1111",param,function(data){
+          if(data && data.list && data.list.length> 0){
+              var origattendanceobj = data.list[0];
+              attendanceId = origattendanceobj[0];
+              setAttendance(origattendanceobj);
+          }
+      });
+    }
+
+    function setAttendance(origattendanceobj){
+      $("#StartDate").html(origattendanceobj[1]);
+      $("#StartTime").html(origattendanceobj[2]);
+      if(origattendanceobj[3] && origattendanceobj[3]!="")
+        $("#txtImage1").attr("src",ImageApi.getImageUrl(origattendanceobj[0],origattendanceobj[3]));
+      $("#StartAddress").html(origattendanceobj[4]);
+
+      $("#EndDate").html(origattendanceobj[5]);
+      $("#EndTime").html(origattendanceobj[6]);
+
+      if(origattendanceobj[7] && origattendanceobj[7]!="")
+        $("#txtImage2").attr("src",ImageApi.getImageUrl(origattendanceobj[0],origattendanceobj[7]));
+      $("#EndAddress").html(origattendanceobj[8]);
+    }
+
+    function takePhoto(nodeId){
+      ImageApi.imageFromCam({},function(compimg){
+        $("#"+nodeId).attr("src",compimg);
+        $("#"+nodeId).attr("editflag","yes");
+        $("#"+nodeId).attr("itemId",GetUuid());
+      });
+    }
+
+    function commit()
+    {
+      //  toast.loading({
+      //       title:"正在保存...",
+      //       duration:2000
+      //   },function(ret){
+       //
+      //   });
+
+      if(!isSign){
+        api.toast({
+            msg : "未打卡!",
+            duration : 1000,
+            location : 'bottom'
+          });
+          return ;
+      }
+
+      if(attendanceId){
+        new Promise(function(resolve, reject){resolve(attendanceId);}).then(saveImages).then(updateEntity).then(saveSuccess);
+      }else{
+        new Promise(function(resolve, reject){var id = GetUuid();resolve(id);}).then(saveImages).then(createEntity).then(saveSuccess);
+      }
+    }
+
+    function createEntity(id){
+      return new Promise(function(resolve, reject) {
+        var txtImage1 = $("#txtImage1");
+        if(txtImage1.attr("editflag") == "yes"){
+           attendanceobj["StartPhoto"]=txtImage1.attr("itemId");
+           txtImage1.attr("editflag","no");
+        }
+
+        var obj = $.extend({"Id": id,"ProjectId":TServerInfo.getProjectId(),"UserId":TServerInfo.getUserId()},attendanceobj);
+
+      AjaxApi.rest("createEntity","OaAttendance",obj,function(data){
+        attendanceId = id;
+        resolve();
+      },{"noTips":true});
+      });
+    }
+
+    function updateEntity(id){
+      return new Promise(function(resolve, reject) {
+        var txtImage1 = $("#txtImage1");
+        if(txtImage1.attr("editflag") == "yes"){
+           attendanceobj["StartPhoto"]=txtImage1.attr("itemId");
+           txtImage1.attr("editflag","no");
+        }
+
+        var txtImage2 = $("#txtImage2");
+        if(txtImage2.attr("editflag") == "yes"){
+           attendanceobj["EndPhoto"]=txtImage2.attr("itemId");
+           txtImage2.attr("editflag","no");
+        }
+
+        var obj = $.extend({"Id": id},attendanceobj);
+        var modifycols=[];
+        for(var k in attendanceobj){modifycols.push(k);}
+
+      if(modifycols.length>0){
+        AjaxApi.rest("updateEntity","OaAttendance",obj,function(data){
+          resolve();
+        },{"DataUpdateColumn":modifycols.join(","),"noTips":true});
+    }
+    });
+  }
+
+    function saveSuccess(){
+      api.toast({
+          msg : "打卡成功!",
+          duration : 1000,
+          location : 'bottom'
+        });
+    }
+
+    function saveImages(ownerId){
+      return new Promise(function(resolve, reject) {
+      var imageInfos = [];
+      var txtImage1 = $("#txtImage1");
+      if(txtImage1.attr("editflag") == "yes"){
+        var imageInfo = ImageApi.getImageInfo(txtImage1.attr("itemId"),txtImage1.attr("src"),"");
+        imageInfos.push(imageInfo);
+      }
+
+      var txtImage2 = $("#txtImage2");
+      if(txtImage2.attr("editflag") == "yes"){
+        var imageInfo = ImageApi.getImageInfo(txtImage2.attr("itemId"),txtImage2.attr("src"),"");
+        imageInfos.push(imageInfo);
+      }
+
+      if(imageInfos.length>0){
+        AjaxApi.fastUploadImages(imageInfos,ownerId,function(ret){
+            resolve(ownerId);
+        },false);
+      }else{
+          resolve(ownerId);
+      }
+    });
+    }
+
+
+    var islocating = false;
+    function getLocation(mode){
+      if(mode == "End"){
+          if(!attendanceId){
+            api.toast({
+              msg : "还未签到",
+              duration : 2000,
+              location : 'bottom'
+            });
+            return;
+          }
+      }
+
+      if(islocating)
+         return;
+
+     $("#"+mode+"Date").html((new Date()).Format("yyyy-MM-dd"));
+     $("#"+mode+"Time").html((new Date()).Format("hh:mm:ss"));
+
+      islocating = true;
+      $("#"+mode+"Locicon").addClass("fa-spin");
+
+     execAMapLBS(function(aMapLBS){
+       aMapLBS.singleLocation({
+           timeout: 10
+       }, function(ret, err) {
+           if (ret.status && ret.lon!=0 && ret.lat!=0) {
+               attendanceobj[mode+"Lon"] = ret.lon;
+               attendanceobj[mode+"Lat"] = ret.lat;
+
+               var distance = calcDistance(lon,lat,ret.lon,ret.lat);
+               if(distance>500){
+                 isSign = false;
+
+                 islocating = false;
+                 $("#"+mode+"Locicon").removeClass("fa-spin");
+
+                 api.toast({
+                   msg : "距离项目位置太远，无法打卡",
+                   duration : 2000,
+                   location : 'bottom'
+                 });
+                 return ;
+               }
+
+               aMapLBS.singleAddress({
+                 timeout: 10
+                 }, function(ret, err) {
+                     islocating = false;
+                     $("#"+mode+"Locicon").removeClass("fa-spin");
+
+                     if (ret.status) {
+                         isSign = true;
+                         attendanceobj[mode+"Address"] = ret.address.formattedAddress;
+                         $("#"+mode+"Address").val(ret.address.formattedAddress);
+                     }else{
+                       api.toast({
+                         msg : '定位失败',
+                         duration : 2000,
+                         location : 'bottom'
+                       });
+                     }
+                 });
+           }else {
+             islocating = false;
+             $("#"+mode+"Locicon").removeClass("fa-spin");
+
+             api.toast({
+               msg : '定位失败',
+               duration : 2000,
+               location : 'bottom'
+             });
+           }
+       });
+     });
+
+    }
+    </script>
+</html>

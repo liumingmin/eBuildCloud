@@ -1,0 +1,173 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/aui-pull-refresh.css" />
+    <style type="text/css">
+    .am-with-fixed-tab {
+      padding-top: 0rem;
+    }
+    </style>
+</head>
+<body class="am-with-fixed-tab">
+  <div id="header" class="am-header-fixed">
+
+  </div>
+
+    <section class="aui-refresh-content">
+      <ul id="workerInfoContent" name="workerInfoTabContent" class="aui-list aui-media-list" style="background-color:#f5f5f5">
+        <br/>  <br/><br/><br/><br/><br/><br/>  <br/><br/><br/><br/><br/>
+      </ul>
+    </section>
+
+
+    <script id="workerInfoTpl" type="text/html">
+
+        {{each list}}
+
+        <li class="aui-list-item aui-list-item-middle" style="background-color:#ffffff;" >
+            <div class="aui-row aui-list-item-text aui-font-size-12 aui-padded-t-5 aui-padded-b-10 aui-padded-r-15" >
+              <div class="aui-col-xs-6 aui-text-left aui-font-size-14">{{$value[2]}}</div>
+              <div class="aui-col-xs-6 aui-text-right">
+                <div class="aui-btn aui-btn-outlined aui-btn-xs aui-btn-primary" onclick="editWorkerInfo('{{$value[0]}}')">编辑</div>
+              </div>
+            </div>
+
+            <div class="aui-row aui-list-item-text aui-font-size-12 aui-padded-t-5 aui-padded-b-10 aui-padded-r-15" >
+              <div class="aui-col-xs-3 aui-text-left">{{$value[1]}} </div>
+              <div class="aui-col-xs-6 aui-text-left"> <a id="phone" href="tel:{{$value[3]}}">手机号:{{$value[3]}}</a></div>
+              <div class="aui-col-xs-3 aui-text-left">日薪:{{$value[4]}}</div>
+            </div>
+        </li>
+
+        {{/each}}
+    </script>
+    <!-- <div class="aui-media-list-item-inner">
+        <div class="aui-list-item-inner">
+          <div class="aui-list-item-text" style="display:inline-flex;">
+              <span class="aui-ellipsis" style="width:16em;">{{$value[2]}} </span>
+          </div>
+        </div>
+    </div> -->
+    <!-- {{if $value[6] ==0}}{{/if}} -->
+</body>
+<script type="text/javascript" src="../../script/api.js" ></script>
+<script type="text/javascript" src="../../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../../script/common.js'></script>
+<script type='text/javascript' src='../../script/queryapi.js'></script>
+<script type='text/javascript' src='../../script/template.js'></script>
+<script type="text/javascript" src="../../script/aui-pull-refresh.js"></script>
+<script type="text/javascript" src="../../script/aui-scroll.js" ></script>
+<script type='text/javascript' src='../../script/controls.js'></script>
+<script type="text/javascript" src="../../script/aui-tab.js"></script>
+<script type="text/javascript">
+
+var tab;
+
+var pageComp = new PageComponent(0,10,loadworkerInfos);
+
+apiready = function () {
+
+  var height = $("#header").height();
+  $('body').css('padding-top', height+1);
+
+  initPull();
+  initPullBottom();
+  loadworkerInfoData()
+}
+
+function initPull(){
+  var pullRefresh = new auiPullToRefresh({
+    container: document.querySelector('.aui-refresh-content'),
+    triggerDistance: 100
+},function(ret){
+    if(ret.status=="success"){
+      loadworkerInfoData();
+      setTimeout(function(){
+        pullRefresh.cancelLoading(); //刷新成功后调用此方法隐藏
+      },1500);
+    }
+})
+}
+
+function loadData(){
+  loadworkerInfoData();
+}
+
+function loadworkerInfoData(){
+  pageComp.load();
+}
+
+function loadMoreworkerInfokData(){
+  pageComp.loadMore();
+}
+
+function initPullBottom(){
+  var scroll = new auiScroll({
+          listen:true,
+          distance:5 //判断到达底部的距离，isToBottom为true
+      },function(ret){
+          if(ret.isToBottom){
+            loadMoreworkerInfokData();
+            //alert("已到达底部");
+              //document.getElementById("demo").textContent = "已到达底部";
+          }else{
+              //document.getElementById("demo").textContent = "滚动高度："+ret.scrollTop;
+
+          }
+
+      });
+
+}
+
+function loadworkerInfos(pagecomp){
+    pagecomp.setLoadState(true);
+    var param = $.extend(pagecomp.getPageParam(),TServerInfo.getProjUserParam());
+    AjaxApi.query("query_2003",param,function(data){
+      if(data.total) pagecomp.setTotal(data.total);
+
+      var datalist = data.list;
+      if(datalist){
+        var tplData = {
+          "list" : datalist
+        };
+        var html = template("workerInfoTpl", tplData);
+
+        if(pagecomp.getIsAppend()){
+          $("#workerInfoContent").append(html);
+        }else{
+          $("#workerInfoContent").html(html);
+        }
+      }
+      pagecomp.setLoadState(false);
+
+    //  AjaxApi.getredpoint("SiteworkerInfo",0);
+    });
+}
+
+function editWorkerInfo(id){
+
+  api.openWin({
+                name: "workerinfocurd_win",
+                url: "workerinfocurd_win.html",
+                pageParam: {
+                    isFrame: false,
+                    workerInfoId:id
+                },
+                bgColor: '#FFFFFF',
+                slidBackEnabled: false,
+                vScrollBarEnabled:false,
+                hScrollBarEnabled:false,
+                delay: 0
+            }
+    );
+}
+
+</script>
+</html>

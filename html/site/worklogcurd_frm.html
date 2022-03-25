@@ -1,0 +1,440 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <style type="text/css">
+    .aui-list .aui-list-item-media {
+        width: 3rem;
+    }
+    .notes-add {
+        position: fixed;
+        left: 0.5rem;
+        bottom: 0.5rem;
+        width: 3rem;
+        z-index: 99;
+    }
+    textarea {
+        height: 8rem;
+        background-color: #ffffff;
+        padding: 0.5rem;
+    }
+    .photos img {
+        display: block;
+        width: 100%;
+    }
+    .add-photos > div {
+        width: 100%;
+        height:5.15rem;
+        line-height: 5.15rem;
+    }
+    .add-photos > div .aui-iconfont {
+        font-size: 2rem;
+        color: #ccc;
+    }
+    .image-item {
+        position: relative;
+        height: 5.3rem;
+        overflow: hidden;
+        background-color: #f0f0f0;
+    }
+    .image-item img {
+        display: block;
+        margin: 0 auto;
+        width: auto;
+        height: 100%;
+    }
+    .image-item .delete-btn {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 28px;
+        height: 28px;
+        background-color: rgba(0,0,0,0.7);
+        margin-left: -14px;
+        margin-top: -14px;
+        color: #ffffff;
+        text-align: center;
+        border-radius: 50%;
+    }
+    </style>
+</head>
+<body>
+
+  <section class="aui-content-padded">
+<ul class="aui-list aui-form-list">
+
+  <li class="aui-list-item">
+      <div class="aui-list-item-inner">
+        <div class="aui-list-item-label">
+            日期
+        </div>
+          <div class="aui-list-item-input">
+              <input id="LogDate" type="text" placeholder="" readonly onclick="datepick('LogDate')">
+          </div>
+          <div class="aui-pull-right  " style="width:40px !important">
+              <a onclick="datepick('LogDate')"  style="width:100%"> &gt;&gt;&nbsp;</a>
+          </div>
+      </div>
+  </li>
+
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                天气
+            </div>
+            <div class="aui-list-item-input">
+                <input id="Weather" type="text" placeholder="" >
+            </div>
+        </div>
+    </li>
+
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                施工天数
+            </div>
+            <div class="aui-list-item-input">
+                <input id="Days" type="number" placeholder="" >
+            </div>
+        </div>
+    </li>
+
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                标题
+            </div>
+            <div class="aui-list-item-input">
+                <input id="Title" type="text" placeholder="" >
+            </div>
+        </div>
+    </li>
+  </ul>
+
+</section>
+  <section class="aui-content-padded">
+    <textarea id="Content" style="height:8em;overflow-y:scroll;background-color:#ffffff;" placeholder="施工日志内容"></textarea>
+  </section>
+
+  <p class="aui-margin-l-15 aui-margin-t-15">附件图片(长按可删除图片) </p>
+  <section class="aui-content-padded">
+    <div id="imageLists"  class="aui-row aui-row-padded">
+        <div id="txtImage" class="aui-col-xs-4 add-photos" onclick="ImageApi.fastSelectImage({},'txtImage',true);">
+            <div class="aui-border aui-text-center">
+                <i class="aui-iconfont aui-icon-plus"></i>
+            </div>
+        </div>
+    </div>
+  </section>
+
+  <script id="noticeImageTpl" type="text/html">
+
+      {{each list}}
+
+      <div class="aui-col-xs-4 image-item">
+        <img id="{{$value[2]}}" flag="1" src="{{$value[1]}}" class="notes-image" >
+      </div>
+
+      {{/each}}
+  </script>
+
+  <section class="aui-content-padded">
+
+  <ul class="aui-list aui-form-list">
+  <li class="aui-list-item">
+      <div class="aui-list-item-inner">
+          <div class="aui-list-item-label">
+              发送范围
+          </div>
+
+          <div class="aui-list-item-input">
+                <input  id="UserNames" placeholder="" type="text" readonly>
+          </div>
+          <div class="aui-pull-right  " style="width:40px !important">
+              <a onclick="selectUsers('UserNames')"  style="width:100%"> &gt;&gt;&nbsp;</a>
+          </div>
+      </div>
+  </li>
+
+  </ul>
+  </section>
+</body>
+
+<script type='text/javascript' src='../../script/api.js'></script>
+<script type="text/javascript" src="../../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../../script/common.js'></script>
+<script type='text/javascript' src='../../script/queryapi.js'></script>
+<script type='text/javascript' src='../../script/template.js'></script>
+<script type="text/javascript" src="../../script/hammer.min.js"></script>
+<script type="text/javascript" src="../../script/imageapi.js"></script>
+<script type="text/javascript" src="../../script/aui-toast.js" ></script>
+<script type="text/javascript" src="../../script/bluebird.min.js" ></script>
+
+<script type='text/javascript'>
+var toast = new auiToast();
+
+var deleteImageIds=[];
+
+var orginLeaveUserIds=[];
+
+function datepick(nodeid){
+  api.openPicker({
+    type: 'date',
+    date: new Date().Format("yyyy-MM-dd"),
+    title: '选择日期'
+  },function(ret,err){
+      if (ret) {
+        var monthstr = ret.month+"";
+        var daystr = ret.day+"";
+        var yearstr = ret.year+"";
+        $("#"+nodeid).val(yearstr+"-"+monthstr.PadLeft(2,0)+"-"+daystr.PadLeft(2,0));
+      }
+  });
+}
+
+apiready = function(){
+    if(api.pageParam.workLogId && api.pageParam.workLogId!=""){
+        loadEntity(api.pageParam.workLogId);
+        loadImages(api.pageParam.workLogId);
+        loadUserLink(api.pageParam.workLogId);
+    }else{
+        $("#LogDate").val(new Date().Format("yyyy-MM-dd"));
+        //$("#Weather").val();
+    }
+}
+
+function loadEntity(id){
+  AjaxApi.rest("retrievEntity","SiteWorkLog",id,function(data){
+        $("#LogDate").val(data.LogDate.sliceWith(gDayLtTimeSuffix));
+        $("#Weather").val(data.Weather);
+        $("#Days").val(data.Days);
+        $("#Title").val(data.Title);
+        $("#Content").val(data.Content);
+    });
+}
+
+function preImageUrl(datalist)
+{
+  var picIndex = 1;
+    for (var i = 0; i < datalist.length; i++) {
+      var item = datalist[i];
+      if(item[picIndex] && item[picIndex]!=""){
+        item[picIndex] = ImageApi.getImageUrl(item[0],item[picIndex]);
+      }else{
+        item[picIndex]="image/project.jpg";
+      }
+    }
+}
+
+function loadImages(ownerId){
+  AjaxApi.query("query_1006",{"OwnerId":ownerId},function(data){
+      var datalist = data.list;
+      if(datalist&& datalist.length>0){
+        preImageUrl(datalist);
+        var tplData = {
+          "list" : datalist
+        };
+        var html = template("noticeImageTpl", tplData);
+        $("#txtImage").before(html);
+
+        for (var i = 0; i < datalist.length; i++) {
+            var item = datalist[i];
+            ImageApi.addImagePress(document.getElementById(item[2]));
+            deleteImageIds.push(item[2]);
+        }
+      }
+    });
+}
+
+function loadUserLink(ownerId){
+  var queryparam = {"WorkLogId":ownerId};
+
+  AjaxApi.query("query_1213",queryparam,function(data){
+        var datalist = data.list;
+        if(datalist&& datalist.length>0){
+            currSelectUserNodeId="UserNames";
+            setSelectUsers(JSON.stringify(datalist),"[]");
+            orginLeaveUserIds = datalist.select(0);
+        }
+   });
+}
+
+function showMsg(msg){
+  api.toast({
+      msg : msg,
+      duration : 1000,
+      location : 'bottom'
+    });
+}
+
+function enableClickOnceBtn(){
+  try{
+  api.execScript({
+    name: 'workreportcurd_win',
+    script: 'enableClickOnceBtn()'
+   });
+  }catch(e){}
+}
+
+function commit()
+{
+
+  if($("#Days").val() == ""){
+    showMsg("施工天数!");
+    enableClickOnceBtn();
+    return ;
+  }
+
+  if($("#Title").val() == ""){
+    showMsg("标题必填!");
+    enableClickOnceBtn();
+    return ;
+  }
+
+  if($("#Content").val() == ""){
+    showMsg("内容必填!");
+    enableClickOnceBtn();
+    return ;
+  }
+
+  toast.loading({
+        title:"正在保存...",
+        duration:2000
+    },function(ret){
+
+    });
+
+    saveWorkLog();
+}
+
+var masterEntityOp = new EntityBatchOp("SiteWorkLog","LogDate,Weather,Days,Title,Content");
+var userLinkEntityOp = new EntityBatchOp("SiteWorkLogLink","","UserId");
+var attachmentEntityOp = CreateAttachEntBatchOp();
+
+function saveWorkLog(){
+  var ownerId = GetUuid();
+  if(api.pageParam.workLogId && api.pageParam.workLogId!=""){
+     ownerId = api.pageParam.workLogId;
+  }
+
+  var entObj = {"Id":ownerId,
+        "LogDate":$("#LogDate").val()+gDayLtTimeSuffix,
+        "Weather":$("#Weather").val(),
+        "Title":$("#Title").val(),
+        "Days":parseInt($("#Days").val()),
+        "Content":$("#Content").val(),
+        "ProjectId":TServerInfo.getProjectId(),
+        "CreateUserId":TServerInfo.getUserId()
+      };
+
+  if(api.pageParam.workLogId && api.pageParam.workLogId!=""){
+    masterEntityOp.updateEntity(entObj);
+  }else{
+    masterEntityOp.addEntity(entObj);
+  }
+
+  //images
+  var imageInfos = [];
+  $("#imageLists").find("img").each(function(){
+    var flag = $(this).attr("flag");
+    if(!(flag && flag==1)){
+      var imageInfo = ImageApi.getImageInfo($(this).attr("id"),$(this).attr("src"),"");
+      imageInfo["OwnerId"] = ownerId;
+      imageInfos.push(imageInfo);
+    }else{
+      deleteImageIds.removeItem($(this).attr("id"));
+    }
+  });
+
+  attachmentEntityOp.deleteByFields(deleteImageIds);
+
+  //links
+  var userLinks = [];
+  var users = $("#UserNames").attr("users");
+  if(users){
+    var usersArray = JSON.parse(users);
+    if(usersArray.length>0){
+      for(var i=0;i<usersArray.length;++i){
+          var userId = usersArray[i][0];
+          userLinks.push({"Id":GetUuid(),"WorkLogId":ownerId,"UserId":userId,"ProjectId":TServerInfo.getProjectId()});
+      }
+    }
+  }
+
+  var nowUserIds = userLinks.select("UserId");
+  var addUserLinks = userLinks.subtractBy("UserId",orginLeaveUserIds);
+  var deleteUserIds = orginLeaveUserIds.subtract(nowUserIds);
+
+  userLinkEntityOp.addEntities(addUserLinks);
+  userLinkEntityOp.deleteByFields(deleteUserIds);
+
+  AjaxApi.batchSave([masterEntityOp,userLinkEntityOp,attachmentEntityOp],imageInfos,
+    {"noTips":true},function(data){
+       saveSuccess();
+  });
+}
+
+function reloadParent(){
+  try{
+  api.execScript({
+    name: 'workloglist_win',
+    frameName: 'workloglist_frm',
+    script: 'loadData()'
+   });
+  }catch(e){}
+}
+
+function saveSuccess(){
+  api.toast({
+      msg : "提交成功!",
+      duration : 1000,
+      location : 'bottom'
+    });
+
+setTimeout(function(){reloadParent();api.closeWin();},1000);
+}
+
+
+var currSelectUserNodeId;
+function selectUsers(nodeid){
+   currSelectUserNodeId = nodeid;
+   var users = $("#"+nodeid).attr("users");
+   var tags = $("#"+nodeid).attr("tags");
+
+   api.openWin({
+                name: "app_selectusers",
+                url: "../../selectusers.html",
+                pageParam: {
+                    isFrame: false,
+                    srcWinName:"worklogcurd_win",
+                    srcFrameName:"worklogcurd_frm",
+                    selectedUsers: (users?users:"[]"),
+                    tags:(tags?tags:"[]")
+                },
+                bgColor: '#FFFFFF',
+                slidBackEnabled: false,
+                vScrollBarEnabled:false,
+                hScrollBarEnabled:false,
+                delay: 0
+            }
+    );
+}
+
+function setSelectUsers(data,tagstr){
+    $("#"+currSelectUserNodeId).attr("users",data);
+    $("#"+currSelectUserNodeId).attr("tags",tagstr);
+
+    var selectedUsers = JSON.parse(data);
+
+    var selectUserStr = "";
+    for(var i=0;i<selectedUsers.length;++i){
+      selectUserStr+=selectedUsers[i][1]+",";
+    }
+
+    $("#"+currSelectUserNodeId).val(selectUserStr);
+}
+</script>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+  <html>
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+      <title></title>
+      <link rel="stylesheet" type="text/css" href="css/app.css" />
+      <link rel="stylesheet" type="text/css" href="css/aui.css" />
+      <link rel="stylesheet" type="text/css" href="css/aui-pull-refresh.css" />
+      <style>
+          body{
+
+          }
+
+          .am-with-fixed-custheader {
+            padding-top: 4.4rem;
+          }
+      </style>
+  </head>
+  <body class="am-with-fixed-custheader aui-margin-l-0">
+    <div id="header" class="am-header-fixed" >
+    <header id="aui-header" class="aui-bar aui-bar-nav aui-bar-light">
+      <a class="aui-btn aui-pull-left" tapmode onclick="closeWin()">
+          <span class="aui-iconfont aui-icon-left"></span>
+      </a>
+    <div class="aui-title" >多选人员</div>
+
+    <a class="aui-btn aui-pull-right" tapmode onclick="selectUsers()">
+        <span class="aui-iconfont aui-icon-correct"></span>
+    </a>
+    </header>
+  <div id="tagListContent" class="aui-padded-b-5 aui-padded-l-5 aui-padded-r-5" style="background-color:#f5f5f5;" >
+
+  </div>
+</div>
+<section class="aui-refresh-content " >
+    <ul id="userListContent" class="aui-list aui-media-list" style="background-color:#f5f5f5">
+
+<br/>  <br/><br/><br/><br/><br/><br/>  <br/><br/><br/><br/><br/>
+      </ul>
+</section>
+
+      <script id="userListTpl" type="text/html">
+
+          {{each list}}
+
+          <li class="aui-list-item aui-list-item-middle" style="background-color:#ffffff;">
+            <div class="aui-media-list-item-inner">
+              <div class="aui-list-item-media"  style="width:auto;">
+                <input  class="aui-checkbox aui-margin-r-15 " style="height:30px;width:30px;margin-top:5px;" type="checkbox"  utags="{{$value[4]}}"
+                name="userCheck" realName="{{$value[2]}}" userId="{{$value[0]}}"  pictureId="{{$value[3]}}"/>
+                  <img src="{{$value[5]}}"   style="height:40px;width:40px" class="aui-img-round"/>
+              </div>
+              <div class="aui-list-item-inner">
+                <div class="aui-list-item-title">{{$value[2]}}({{$value[1]}})  </div>
+              </div>
+            </div>
+          </li>
+
+          {{/each}}
+      </script>
+
+      <script id="tagListTpl" type="text/html">
+          {{each list}}
+          <div class="aui-btn aui-btn-primary  aui-btn-outlined" style="margin-top:5px !important;" name="tagCheck" uTagName="{{$value[0]}}" onclick="selectTag(this,'{{$value[0]}}')">{{$value[0]}}</div>
+          {{/each}}
+      </script>
+  </body>
+  <script type="text/javascript" src="script/api.js" ></script>
+  <script type="text/javascript" src="css/amazeui/js/jquery.min.js"></script>
+  <script type='text/javascript' src='script/common.js'></script>
+  <script type='text/javascript' src='script/queryapi.js'></script>
+  <script type='text/javascript' src='script/template.js'></script>
+  <script type="text/javascript" src="script/imageapi.js"></script>
+  <script type="text/javascript" src="script/aui-pull-refresh.js"></script>
+  <script type="text/javascript" src="script/aui-dialog.js" ></script>
+  <script type="text/javascript">
+  function closeWin(){
+      api.closeWin({
+      });
+  }
+
+var tags = [];
+  var dialog = new auiDialog({});
+
+  var orginUsers = [];
+  var orginTags = [];
+
+      apiready = function(){
+        var header = $api.byId('aui-header');
+        $api.fixStatusBar(header);
+
+        var height = $("#header").height();
+        $('body').css('padding-top', height);
+
+          orginUsers =JSON.parse(api.pageParam.selectedUsers);
+          orginTags=JSON.parse(api.pageParam.tags);
+
+          initPull();
+          initTags();
+          loadUsers();
+      };
+
+      function initTags(){
+        var projectId = api.pageParam.projectId;
+        if(!projectId){
+            projectId = TServerInfo.getProjectId();
+        }
+
+        AjaxApi.query("query_1008",{"ProjectId":projectId},function(data){
+          var datalist = data.list;
+          if(datalist){
+            var tplData = {
+              "list" : datalist
+            };
+            var html = template("tagListTpl", tplData);
+            $("#tagListContent").html(html);
+
+          }
+          var height = $("#header").height();
+          $('body').css('padding-top', height);
+        });
+      }
+
+      function initPull(){
+        var pullRefresh = new auiPullToRefresh({
+          container: document.querySelector('.aui-refresh-content'),
+          triggerDistance: 100
+      },function(ret){
+          if(ret.status=="success"){
+            loadUsers();
+            setTimeout(function(){
+              pullRefresh.cancelLoading(); //刷新成功后调用此方法隐藏
+            },1500);
+          }
+      })
+      }
+
+      function preUsermageUrl(datalist)
+      {
+        var imageIdx = 3;
+        var imageUrlIdx = 5;
+          for (var i = 0; i < datalist.length; i++) {
+            var item = datalist[i];
+            if(item[imageIdx] && item[imageIdx]!=""){
+              item[imageUrlIdx] = ImageApi.getGlobleImageUrl(item[0],item[imageIdx]);
+            }else{
+              item[imageUrlIdx]="image/user.jpg";
+            }
+          }
+      }
+
+      function removeExclude(datalist,excludeIds){
+          for (var i = datalist.length-1; i >=0 ; i--) {
+             var item = datalist[i];
+             if($.inArray(item[0],excludeIds)>=0){
+                datalist.splice(i,1);
+             }
+          }
+
+          return datalist;
+      }
+
+      function loadUsers(){
+        var projectId = api.pageParam.projectId;
+        if(!projectId){
+            projectId = TServerInfo.getProjectId();
+        }
+
+        var params = {"ProjectId":projectId};
+        if(!api.pageParam.includeSelf){
+          params["UserId"]=TServerInfo.getUserId();
+        }
+
+        var excludeIds=[];
+        if(api.pageParam.excludeIds ){
+            excludeIds = api.pageParam.excludeIds;
+        }
+
+          AjaxApi.query("query_1007",params,function(data){
+            var datalist = data.list;
+            if(datalist){
+              if(excludeIds.length>0)
+                datalist = removeExclude(datalist,excludeIds);
+
+              preUsermageUrl(datalist);
+              var tplData = {
+                "list" : datalist
+              };
+              var html = template("userListTpl", tplData);
+              $("#userListContent").html(html);
+
+            }
+
+            initSelectedUsersTags();
+          });
+      }
+
+      function initSelectedUsersTags(){
+        $("*[name='tagCheck']").each(function(){
+             var utag = $(this).attr('uTagName');
+             if($.inArray(utag,orginTags)>=0){
+                  selectTag(this,utag);
+             }
+        });
+
+        var userIds = [];
+        for(var i=0;i<orginUsers.length;++i){
+           var user = orginUsers[i];
+           userIds.push(user[0]);
+        }
+
+        $("*[name='userCheck']").each(function(){
+            var userId = $(this).attr("userId")
+
+            if($.inArray(userId,userIds) >=0){
+               this.checked=true;
+            }else{
+              this.checked=false;
+            }
+        });
+
+        users = orginUsers;
+      }
+
+      function selectUsers(){
+         var users=[];
+        $("*[name='userCheck']").each(function(){
+            if($(this).prop('checked')){
+                users.push([$(this).attr("userId"),$(this).attr("realName"),$(this).attr("pictureId")]);
+            }
+        });
+
+        returnSelectUsers(api.pageParam.srcWinName,api.pageParam.srcFrameName,JSON.stringify(users),JSON.stringify(tags));
+        api.closeWin();
+      }
+
+      function selectTag(tagEl,tagstr){
+        var index = $.inArray(tagstr, tags);
+        if(index >= 0)
+        {
+          tags.splice(index,1);
+          $(tagEl).addClass("aui-btn-outlined");
+        }else{
+          tags.push(tagstr);
+          $(tagEl).removeClass("aui-btn-outlined");
+        }
+
+        checkUsers(tags);
+      }
+
+      function checkUsers(tags){
+        $("*[name='userCheck']").each(function(){
+            var utags = $(this).attr("utags");
+            var utagsarray = utags.split(",");
+            var isfind = false;
+            for(var i=0;i<tags.length;++i){
+              var tag  = tags[i];
+               if($.inArray(tag,utagsarray) >=0){
+                  isfind=true;
+                  break;
+               }
+            }
+
+            if(isfind){
+              this.checked=true;
+            }else{
+              this.checked=false;
+            }
+
+        });
+      }
+
+  </script>
+  </html>

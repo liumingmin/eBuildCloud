@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+  <html>
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+      <title>title</title>
+      <link rel="stylesheet" type="text/css" href="css/aui.css" />
+      <style>
+          body{
+
+          }
+      </style>
+  </head>
+  <body>
+
+    <header class="aui-bar aui-bar-nav aui-bar-light" id="aui-header">
+        <a class="aui-btn aui-pull-left" tapmode onclick="closeWin()">
+            <!-- <span class="aui-iconfont aui-icon-left"></span> -->
+        </a>
+        <div class="aui-title">我的</div>
+    </header>
+
+    <section class="aui-content" id="user-info">
+        <div class="aui-list aui-media-list aui-list-noborder ">
+            <div class="aui-list-item aui-list-item-middle">
+                <div class="aui-media-list-item-inner ">
+                    <div class="aui-list-item-media" style="width:auto">
+                        <img id="PictureSrc" src="image/user.jpg" style="width:50px;height:50px" class="aui-img-round" >
+                    </div>
+                    <div class="aui-list-item-inner aui-list-item-arrow">
+                        <div class="aui-list-item-text text-white aui-font-size-18" id="RealName"></div>
+                        <div class="aui-list-item-text text-white">
+                           <div><i class="aui-iconfont aui-icon-mobile aui-font-size-14"></i><span id="UserName"></span?</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- <section class="aui-content aui-grid aui-margin-b-15">
+        <div class="aui-row">
+            <div class="aui-col-xs-4 aui-border-r">
+                <big class="aui-text-warning">0.00<small> 元</small></big>
+                <div class="aui-gird-lable aui-font-size-12">余额</div>
+            </div>
+            <div class="aui-col-xs-4 aui-border-r">
+                <big class="aui-text-danger">0.00<small> 个</small></big>
+                <div class="aui-gird-lable aui-font-size-12">优惠</div>
+            </div>
+            <div class="aui-col-xs-4">
+                <big class="aui-text-success">0.00<small> 分</small></big>
+                <div class="aui-gird-lable aui-font-size-12">积分</div>
+            </div>
+        </div>
+    </section> -->
+    <section class="aui-content">
+        <ul class="aui-list aui-list-in aui-margin-b-15">
+            <li class="aui-list-item" onclick="openUserInfo()">
+                <div class="aui-list-item-label-icon">
+                    <i class="aui-iconfont aui-icon-image aui-text-info"></i>
+                </div>
+                <div class="aui-list-item-inner aui-list-item-arrow">
+                    <div class="aui-list-item-title">基本信息</div>
+                </div>
+            </li>
+            <li class="aui-list-item" onclick="openModifyPwd()">
+                <div class="aui-list-item-label-icon">
+                    <i class="aui-iconfont aui-icon-display aui-text-danger"></i>
+                </div>
+                <div class="aui-list-item-inner aui-list-item-arrow">
+                    <div class="aui-list-item-title">修改密码</div>
+                </div>
+            </li>
+            <!-- <li class="aui-list-item">
+                <div class="aui-list-item-label-icon">
+                    <i class="aui-iconfont aui-icon-image aui-text-info"></i>
+                </div>
+                <div class="aui-list-item-inner aui-list-item-arrow">
+                    <div class="aui-list-item-title">美食相册</div>
+                </div>
+            </li> -->
+        </ul>
+        <ul class="aui-list aui-list-in">
+            <!-- <li class="aui-list-item">
+                <div class="aui-list-item-label-icon">
+                    <i class="aui-iconfont aui-icon-cart aui-text-info"></i>
+                </div>
+                <div class="aui-list-item-inner aui-list-item-arrow">
+                    <div class="aui-list-item-title">积分商城</div>
+                    <div class="aui-list-item-right">0元好物在这里</div>
+                </div>
+            </li> -->
+            <li class="aui-list-item" onclick="logout()">
+                <div class="aui-list-item-label-icon" >
+                    <i class="aui-iconfont aui-icon-back aui-text-warning"></i>
+                </div>
+                <div class="aui-list-item-inner aui-list-item-arrow">
+                    <div class="aui-list-item-title">注销</div>
+                    <div class="aui-list-item-right"></div>
+                </div>
+            </li>
+        </ul>
+    </section>
+  </body>
+  <script type="text/javascript" src="script/api.js" ></script>
+  <script type="text/javascript" src="css/amazeui/js/jquery.min.js"></script>
+  <script type='text/javascript' src='script/common.js'></script>
+  <script type='text/javascript' src='script/queryapi.js'></script>
+  <script type='text/javascript' src='script/template.js'></script>
+  <script type="text/javascript" src="script/imageapi.js"></script>
+  <script type="text/javascript">
+
+  var userObj;
+  var isLoaded= false;
+      apiready = function(){
+        var header = $api.byId('aui-header');
+        $api.fixStatusBar(header);
+
+        initPage();
+        api.addEventListener({
+		    name:'viewappear'
+      },function(ret,err){
+    			initPage();
+    		});
+      };
+
+      function swithModuleGroup(){
+      }
+
+      function initPage(){
+        if(!isLoaded){
+          initUserInfo();
+          isLoaded = true;
+        }
+      }
+
+      function initUserInfo(){
+        var userId = TServerInfo.getUserId();
+        if(userId){
+          AjaxApi.rest("retrievEntity","SysUser",userId,function(data){
+              userObj = data;
+
+              $("#RealName").html(userObj.RealName);
+              $("#UserName").html(userObj.UserName);
+
+              var pictureSrc = ImageApi.getGlobleImageUrl(userObj.Id,userObj.PictureId);
+              if(pictureSrc && pictureSrc!=""){
+                $("#PictureSrc").attr("src",pictureSrc);
+              }
+
+          });
+        }
+      }
+
+
+      function logout(){
+        isLoaded = false;
+        gClearLastUserData();
+
+         $api.setStorage('projectId',"");
+         $api.setStorage('projectName',"");
+         $api.setStorage('userId',"");
+         $api.setStorage('secret',"");
+
+         api.ajax({
+     		  url:"http://"+TServerInfo.getHostUrl()+"/logout",
+     		  method:'get',
+     		  cache: false,
+     		  dataType: 'json',
+     		},function(ret,err){
+          LoginTo();
+        });
+
+
+      }
+
+      function LoginTo(){
+        api.openWin({
+                      name: "login",
+                      url: "http://"+TServerInfo.getHostUrl()+"/login?clientType=mobile",
+                      pageParam: {
+                          isFrame: false
+                      },
+                      bgColor: '#FFFFFF',
+                      slidBackEnabled: false,
+                      vScrollBarEnabled:false,
+                      hScrollBarEnabled:false,
+                      delay: 0
+                  });
+      }
+
+      function openUserInfo(){
+        api.openWin({
+                      name: "index.userinfo_win",
+                      url: "userinfo_win.html",
+                      pageParam: {
+                          isFrame: false
+                      },
+                      bgColor: '#FFFFFF',
+                      slidBackEnabled: false,
+                      vScrollBarEnabled:false,
+                      hScrollBarEnabled:false,
+                      delay: 0
+                  }
+          );
+      }
+
+      function openModifyPwd(){
+        api.openWin({
+                      name: "index.modifypwd_win",
+                      url: "modifypwd_win.html",
+                      pageParam: {
+                          isFrame: false
+                      },
+                      bgColor: '#FFFFFF',
+                      slidBackEnabled: false,
+                      vScrollBarEnabled:false,
+                      hScrollBarEnabled:false,
+                      delay: 0
+                  }
+          );
+      }
+  </script>
+  </html>

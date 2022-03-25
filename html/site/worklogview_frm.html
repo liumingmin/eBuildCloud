@@ -1,0 +1,209 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <style type="text/css">
+    .aui-list .aui-list-item-media {
+        width: 3rem;
+    }
+    .notes-add {
+        position: fixed;
+        left: 0.5rem;
+        bottom: 0.5rem;
+        width: 3rem;
+        z-index: 99;
+    }
+    textarea {
+        height: 8rem;
+        background-color: #ffffff;
+        padding: 0.5rem;
+    }
+    .photos img {
+        display: block;
+        width: 100%;
+    }
+    .add-photos > div {
+        width: 100%;
+        height:5.15rem;
+        line-height: 5.15rem;
+    }
+    .add-photos > div .aui-iconfont {
+        font-size: 2rem;
+        color: #ccc;
+    }
+    .image-item {
+        position: relative;
+        height: 5.3rem;
+        overflow: hidden;
+        background-color: #f0f0f0;
+    }
+    .image-item img {
+        display: block;
+        margin: 0 auto;
+        width: auto;
+        height: 100%;
+    }
+    .image-item .delete-btn {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 28px;
+        height: 28px;
+        background-color: rgba(0,0,0,0.7);
+        margin-left: -14px;
+        margin-top: -14px;
+        color: #ffffff;
+        text-align: center;
+        border-radius: 50%;
+    }
+    </style>
+</head>
+<body>
+
+  <section class="aui-content-padded">
+<ul class="aui-list aui-form-list">
+
+  <li class="aui-list-item">
+      <div class="aui-list-item-inner">
+        <div class="aui-list-item-label">
+            日期
+        </div>
+          <div class="aui-list-item-input">
+              <input id="LogDate" type="text" placeholder="" readonly>
+          </div>
+      </div>
+  </li>
+
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                天气
+            </div>
+            <div class="aui-list-item-input">
+                <input id="Weather" type="text" placeholder="" readonly>
+            </div>
+        </div>
+    </li>
+
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                施工天数
+            </div>
+            <div class="aui-list-item-input">
+                <input id="Days" type="number" placeholder="" readonly>
+            </div>
+        </div>
+    </li>
+
+    <li class="aui-list-item">
+        <div class="aui-list-item-inner">
+            <div class="aui-list-item-label">
+                标题
+            </div>
+            <div class="aui-list-item-input">
+                <input id="Title" type="text" placeholder="" readonly>
+            </div>
+        </div>
+    </li>
+  </ul>
+
+</section>
+  <section class="aui-content-padded">
+    <textarea id="Content" style="height:8em;overflow-y:scroll;background-color:#ffffff;" placeholder="" readonly></textarea>
+  </section>
+
+  <p class="aui-margin-l-15 aui-margin-t-15">附件图片(长按可删除图片) </p>
+  <section class="aui-content-padded">
+    <div id="imageLists"  class="aui-row aui-row-padded">
+
+    </div>
+  </section>
+
+  <script id="noticeImageTpl" type="text/html">
+
+      {{each list}}
+
+      <div class="aui-col-xs-4 image-item">
+        <img id="{{$value[2]}}" flag="1" src="{{$value[1]}}" class="notes-image" >
+      </div>
+
+      {{/each}}
+  </script>
+
+
+</body>
+
+<script type='text/javascript' src='../../script/api.js'></script>
+<script type="text/javascript" src="../../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../../script/common.js'></script>
+<script type='text/javascript' src='../../script/queryapi.js'></script>
+<script type='text/javascript' src='../../script/template.js'></script>
+<script type="text/javascript" src="../../script/hammer.min.js"></script>
+<script type="text/javascript" src="../../script/imageapi.js"></script>
+<script type="text/javascript" src="../../script/aui-toast.js" ></script>
+<script type="text/javascript" src="../../script/bluebird.min.js" ></script>
+
+<script type='text/javascript'>
+var toast = new auiToast();
+
+var deleteImageIds=[];
+
+var orginLeaveUserIds=[];
+
+apiready = function(){
+    if(api.pageParam.workLogId && api.pageParam.workLogId!=""){
+        loadEntity(api.pageParam.workLogId);
+        loadImages(api.pageParam.workLogId);
+        //loadUserLink(api.pageParam.workLogId);
+    }else{
+        //$("#LogDate").val(new Date().Format("yyyy-MM-dd"));
+        //$("#Weather").val();
+    }
+}
+
+function loadEntity(id){
+  AjaxApi.rest("retrievEntity","SiteWorkLog",id,function(data){
+        $("#LogDate").val(data.LogDate.sliceWith(gDayLtTimeSuffix));
+        $("#Weather").val(data.Weather);
+        $("#Days").val(data.Days);
+        $("#Title").val(data.Title);
+        $("#Content").val(data.Content);
+    });
+}
+
+function preImageUrl(datalist)
+{
+  var picIndex = 1;
+    for (var i = 0; i < datalist.length; i++) {
+      var item = datalist[i];
+      if(item[picIndex] && item[picIndex]!=""){
+        item[picIndex] = ImageApi.getImageUrl(item[0],item[picIndex]);
+      }else{
+        item[picIndex]="image/project.jpg";
+      }
+    }
+}
+
+function loadImages(ownerId){
+  AjaxApi.query("query_1006",{"OwnerId":ownerId},function(data){
+      var datalist = data.list;
+      if(datalist&& datalist.length>0){
+        preImageUrl(datalist);
+        var tplData = {
+          "list" : datalist
+        };
+        var html = template("noticeImageTpl", tplData);
+        $("#imageLists").html(html);
+
+
+      }
+    });
+}
+
+
+</script>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="../../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/aui-pull-refresh.css" />
+    <style type="text/css">
+
+    </style>
+</head>
+<body>
+    <section class="aui-refresh-content">
+  <ul id="safeContent" class="aui-list  aui-media-list" style="background-color:#f5f5f5">
+
+  </ul>
+</section>
+
+    <script id="safeTpl" type="text/html">
+
+        {{each list}}
+        <li class="aui-list-item aui-list-item-middle " style="background-color:#ffffff;" >
+          <div class="aui-list-item-title ">
+            <span class="aui-list-item-text">安全名称:{{$value[1]}}</span>
+
+          </div>
+          <div class="aui-list-item-inner aui-list-item-text">
+            <div >安全发起时间:{{$value[2]}}</div>
+            <div >安全发起人:{{$value[3]}}</div>
+            <div >安全执行人:{{$value[4]}}</div>
+            <div >安全详情描述:{{$value[5]}}</div>
+          </div>
+
+        </li>
+
+        {{/each}}
+    </script>
+</body>
+<script type="text/javascript" src="../../script/api.js" ></script>
+<script type="text/javascript" src="../../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../../script/common.js'></script>
+<script type='text/javascript' src='../../script/queryapi.js'></script>
+<script type='text/javascript' src='../../script/template.js'></script>
+<script type="text/javascript" src="../../script/aui-pull-refresh.js"></script>
+<script type="text/javascript" src="../../script/aui-scroll.js" ></script>
+<script type='text/javascript' src='../../script/controls.js'></script>
+<script type="text/javascript" src="../../script/aui-tab.js"></script>
+<script type="text/javascript">
+
+var pageCompExec = new PageComponent(0,10,loadExecSafes);
+
+apiready = function () {
+  //var height = $("#header").height();
+//  $('body').css('padding-top', height+1);
+
+  pageCompExec.load();
+
+  initPull();
+  initPullBottom();
+}
+
+function initPull(){
+  var pullRefresh = new auiPullToRefresh({
+    container: document.querySelector('.aui-refresh-content'),
+    triggerDistance: 100
+},function(ret){
+    if(ret.status=="success"){
+       pageCompExec.load();
+      setTimeout(function(){
+        pullRefresh.cancelLoading(); //刷新成功后调用此方法隐藏
+      },1500);
+    }
+})
+}
+
+function initPullBottom(){
+  var scroll = new auiScroll({
+          listen:true,
+          distance:5 //判断到达底部的距离，isToBottom为true
+      },function(ret){
+          if(ret.isToBottom){
+          pageCompExec.loadMore();
+            //alert("已到达底部");
+              //document.getElementById("demo").textContent = "已到达底部";
+          }else{
+              //document.getElementById("demo").textContent = "滚动高度："+ret.scrollTop;
+
+          }
+
+      });
+
+}
+
+function loadExecSafes(pagecomp){
+  pagecomp.setLoadState(true);
+  var param = $.extend(pagecomp.getPageParam(),TServerInfo.getProjUserParam(),{"StartDate":api.pageParam.StartDate});
+  AjaxApi.query("query_3202",param,function(data){
+    if(data.total) pagecomp.setTotal(data.total);
+
+    var datalist = data.list;
+    if(datalist){
+      var tplData = {
+        "list" : datalist
+      };
+      var html = template("safeTpl", tplData);
+
+      if(pagecomp.getIsAppend()){
+        $("#safeContent").append(html);
+      }else{
+        $("#safeContent").html(html);
+      }
+    }
+    pagecomp.setLoadState(false);
+  });
+}
+
+
+</script>
+</html>

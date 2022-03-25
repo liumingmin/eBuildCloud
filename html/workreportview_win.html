@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <link rel="stylesheet" type="text/css" href="../css/aui.css" />
+    <link rel="stylesheet" type="text/css" href="../css/font-awesome/css/font-awesome.min.css" />
+</head>
+<body>
+    <header class="aui-bar aui-bar-nav aui-bar-light" id="aui-header">
+        <a class="aui-btn aui-pull-left" tapmode onclick="closeWin()">
+            <span class="aui-iconfont aui-icon-left"></span>
+        </a>
+        <div class="aui-title">工作汇报</div>
+
+        <a class="aui-pull-right aui-btn " onclick="toShare()">
+
+          <span class="aui-iconfont aui-icon-share"  ></span>
+        </a>
+    </header>
+</body>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../css/amazeui/js/jquery.min.js"></script>
+<script type='text/javascript' src='../script/common.js'></script>
+<script type='text/javascript' src='../script/queryapi.js'></script>
+<script type="text/javascript">
+    apiready = function(){
+        api.parseTapmode();
+        var header = $api.byId('aui-header');
+        $api.fixStatusBar(header);
+        var headerPos = $api.offset(header);
+        var body_h = $api.offset($api.dom('body')).h;
+        api.openFrame({
+            name: 'workreportview_frm',
+            url: 'workreportview_frm.html',
+            pageParam: {
+                workReportId:api.pageParam.workReportId
+            },
+            bounces: false,
+            rect: {
+                x: 0,
+                y: headerPos.h,
+                w: 'auto',
+                h: 'auto'
+            }
+        })
+
+
+    };
+    function closeWin(){
+        api.closeWin({
+        });
+    }
+
+    function toShare(){
+      selectUsers();
+    }
+
+
+    function selectUsers(){
+       api.openWin({
+                    name: "app_selectusers",
+                    url: "../selectusers.html",
+                    pageParam: {
+                        isFrame: false,
+                        srcWinName:"workreportview_win",
+                        selectedUsers: "[]",
+                        tags:"[]"
+                    },
+                    bgColor: '#FFFFFF',
+                    slidBackEnabled: false,
+                    vScrollBarEnabled:false,
+                    hScrollBarEnabled:false,
+                    delay: 0
+                }
+        );
+    }
+
+    function setSelectUsers(data,tagstr){
+        var selectedUsers = JSON.parse(data);
+        var userIds = selectedUsers.select(0);
+        var userNames = selectedUsers.select(1).join(",");
+
+        var userLink = [];
+        for(var i=0;i<userIds.length;++i){
+          var userId = userIds[i];
+          userLink.push({"Id":GetUuid(),"WorkReportId":api.pageParam.workReportId,"Kind":1,"UserId":userId,"ProjectId":TServerInfo.getProjectId()});
+        }
+
+        if(userLink.length>0) {
+           AjaxApi.rest("createEntities","OaWorkReportLink",userLink,function(data){
+             api.toast({
+                 msg : "抄送成功:"+userNames,
+                 duration : 1000,
+                 location : 'bottom'
+               });
+           },{"noTips":true});
+         }
+    }
+</script>
+</html>
